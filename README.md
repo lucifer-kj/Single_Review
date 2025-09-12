@@ -21,8 +21,8 @@ A modern, intelligent review management web application that routes customer fee
 ### Technical Features
 - **Next.js 15**: Latest React framework with App Router
 - **TypeScript**: Full type safety throughout the application
-- **Prisma ORM**: Type-safe database operations with PostgreSQL
-- **NextAuth.js v5**: Secure authentication with Google OAuth
+- **Supabase**: Backend-as-a-Service with PostgreSQL and authentication
+- **Supabase Auth**: Secure authentication with Google OAuth
 - **Tailwind CSS**: Utility-first styling with custom design system
 - **Shadcn/ui**: High-quality, accessible UI components
 - **PWA Support**: Installable web app functionality
@@ -31,8 +31,8 @@ A modern, intelligent review management web application that routes customer fee
 
 - **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
 - **UI Components**: Shadcn/ui, Lucide React icons
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js v5 with Google OAuth
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Authentication**: Supabase Auth with Google OAuth
 - **Charts**: Recharts for analytics dashboard
 - **State**: Zustand for client state management
 - **Validation**: Zod schemas
@@ -56,18 +56,19 @@ components/
 └── shared/         # Reusable components
 
 lib/
-├── db.ts           # Database connection
-├── auth.ts         # Auth configuration
-├── validations.ts  # Zod schemas
-└── utils.ts        # Utility functions
+├── supabase.ts         # Supabase browser client
+├── supabase-server.ts  # Supabase server client
+├── auth.ts             # Auth utilities
+├── validations.ts      # Zod schemas
+└── types.ts            # TypeScript types
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js 18+ 
-- PostgreSQL database
-- Google OAuth credentials
+- Supabase account
+- Google OAuth credentials (optional)
 
 ### Installation
 
@@ -82,44 +83,45 @@ lib/
    npm install
    ```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Fill in your environment variables:
+3. **Set up Supabase**
+   - Go to [supabase.com](https://supabase.com) and create a new project
+   - Get your project URL and API keys from Settings → API
+   - Run the database migration from `supabase/migrations/001_initial_schema.sql`
+
+4. **Set up environment variables**
+   Create a `.env.local` file with:
    ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/review_management"
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL="https://your-project-id.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
+   SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
    
-   # NextAuth.js
-   NEXTAUTH_SECRET="your-secret-key-here"
-   NEXTAUTH_URL="http://localhost:3000"
+   # App Configuration
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
    
-   # Google OAuth
+   # Google OAuth (Optional)
    GOOGLE_CLIENT_ID="your-google-client-id"
    GOOGLE_CLIENT_SECRET="your-google-client-secret"
    ```
 
-4. **Set up the database**
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   ```
+5. **Configure Google OAuth (Optional)**
+   - In Supabase Dashboard → Authentication → Providers
+   - Enable Google provider
+   - Add your Google OAuth credentials
 
-5. **Start the development server**
+6. **Start the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+7. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📱 Usage
 
 ### For Business Owners
 
-1. **Sign Up**: Use Google OAuth to create your account
+1. **Sign Up**: Use email/password or Google OAuth to create your account
 2. **Create Business**: Add your business profile with Google review URL
 3. **Share Review Link**: Copy the generated link or QR code
 4. **Monitor Reviews**: View analytics and manage customer feedback
@@ -153,10 +155,9 @@ npm run build        # Build for production
 npm run start        # Start production server
 npm run lint         # Run ESLint
 
-# Database
-npx prisma studio    # Open Prisma Studio
-npx prisma migrate dev  # Run database migrations
-npx prisma generate     # Generate Prisma client
+# Supabase
+npx supabase start     # Start local Supabase (if using local development)
+npx supabase db reset  # Reset database (if using local Supabase)
 
 # UI Components
 npx shadcn@latest add [component-name]  # Add new Shadcn components
@@ -169,13 +170,18 @@ npx shadcn@latest add [component-name]  # Add new Shadcn components
 - **Form Validation**: React Hook Form with Zod validation
 - **Mobile-First**: Responsive design with touch-friendly interactions
 - **SEO Optimized**: Next.js metadata API for search optimization
+- **Supabase Integration**: Server-side rendering with Supabase client
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
 
 1. **Connect Repository**: Link your GitHub repository to Vercel
-2. **Set Environment Variables**: Add all required environment variables
+2. **Set Environment Variables**: Add all required Supabase environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_APP_URL`
 3. **Deploy**: Automatic deployments on every push to main branch
 
 ### Manual Deployment
@@ -186,7 +192,7 @@ npx shadcn@latest add [component-name]  # Add new Shadcn components
    ```
 
 2. **Deploy to your preferred platform**
-   - Ensure PostgreSQL database is accessible
+   - Ensure Supabase project is accessible
    - Set all environment variables
    - Configure domain and SSL certificates
 
@@ -194,11 +200,10 @@ npx shadcn@latest add [component-name]  # Add new Shadcn components
 
 ### Models
 
-- **User**: Business owners with authentication
+- **User**: Business owners with Supabase authentication
 - **Business**: Business profiles and Google review URLs  
 - **Review**: Customer submissions with ratings and feedback
 - **Analytics**: Aggregated metrics and tracking data
-- **Session**: NextAuth.js session management
 
 ### Key Relationships
 
@@ -209,11 +214,12 @@ npx shadcn@latest add [component-name]  # Add new Shadcn components
 
 ## 🔒 Security
 
-- **Authentication**: Secure Google OAuth integration
+- **Authentication**: Secure Supabase Auth with Google OAuth integration
 - **Data Protection**: Private feedback collection for low ratings
 - **Input Validation**: Zod schemas for all form inputs
-- **SQL Injection Protection**: Prisma ORM with parameterized queries
-- **CSRF Protection**: NextAuth.js built-in security features
+- **SQL Injection Protection**: Supabase with parameterized queries
+- **Row Level Security**: Database-level access control with RLS policies
+- **CSRF Protection**: Supabase built-in security features
 
 ## 📈 Analytics
 
@@ -241,7 +247,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Alpha Business Digital**: Design system and project vision
 - **Shadcn/ui**: Beautiful, accessible UI components
 - **Next.js Team**: Amazing React framework
-- **Prisma Team**: Excellent database toolkit
+- **Supabase Team**: Excellent backend-as-a-service platform
 - **Vercel**: Seamless deployment platform
 
 ---
