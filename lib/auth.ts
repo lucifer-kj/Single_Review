@@ -2,9 +2,8 @@ import { createClient } from './supabase-server'
 import { redirect } from 'next/navigation'
 
 export async function getUser() {
-  const supabase = await createClient()
-  
   try {
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     return user
   } catch (error) {
@@ -24,7 +23,11 @@ export async function requireAuth() {
 }
 
 export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
+  try {
+    const supabase = await createClient()
+    await supabase.auth.signOut()
+  } catch (error) {
+    console.error('Error signing out:', error)
+  }
   redirect('/auth/signin')
 }

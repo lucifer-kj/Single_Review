@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,13 +13,28 @@ export function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
 
-  const supabase = createClient()
+  useEffect(() => {
+    try {
+      const client = createClient()
+      setSupabase(client)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize authentication'
+      setError(errorMessage)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+
+    if (!supabase) {
+      setError('Authentication service is not available. Please check your configuration.')
+      setIsLoading(false)
+      return
+    }
 
     try {
       if (isSignUp) {
@@ -55,6 +70,12 @@ export function SignInForm() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     setError('')
+
+    if (!supabase) {
+      setError('Authentication service is not available. Please check your configuration.')
+      setIsLoading(false)
+      return
+    }
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
