@@ -1,0 +1,93 @@
+# Review Management Web App - Cursor Rules
+
+## Project Context
+You are building a review management web application that intelligently routes customer feedback based on ratings. High ratings (4-5 stars) redirect to Google Business reviews, while low ratings (1-3 stars) collect private feedback.
+
+## Tech Stack
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **UI Components**: Shadcn/ui, Lucide React icons
+- **Database**: Supabase
+- **Authentication**: Supabase
+- **Charts**: Recharts for analytics dashboard
+- **State**: Zustand for client state management
+- **Validation**: Zod schemas
+- **Deployment**: Vercel (optimized for Next.js)
+
+## Key Features
+1. **Public Review Form** - Customer name, phone, rating input
+2. **Smart Routing Logic** - Conditional redirects based on rating
+3. **Admin Dashboard** - Analytics, metrics, and review management
+4. **Link Sharing** - Copy link, QR codes, social sharing
+5. **PWA Support** - Installable web app functionality
+
+## Development Guidelines
+
+### Code Style
+- Use TypeScript for all files
+- Prefer functional components with hooks
+- Use Tailwind for styling (utility-first approach)
+- Follow Next.js 15 app router conventions
+- Keep components small and focused
+
+### File Structure
+```
+app/
+├── (auth)/          # Authentication pages
+├── (dashboard)/     # Admin dashboard
+├── review/[id]/     # Public review forms
+├── api/            # API routes
+├── globals.css     # Global styles
+└── layout.tsx      # Root layout
+
+components/
+├── ui/             # Shadcn components
+├── forms/          # Form components
+├── charts/         # Chart components
+└── shared/         # Reusable components
+
+lib/
+├── db.ts           # Database connection
+├── auth.ts         # Auth configuration
+├── validations.ts  # Zod schemas
+└── utils.ts        # Utility functions
+```
+
+### Database Models (Prisma)
+- **User** - Business owners with authentication
+- **Business** - Business profiles and Google review URLs
+- **Review** - Customer submissions with ratings and feedback
+- **Analytics** - Aggregated metrics and tracking data
+
+### Key Patterns
+- Use server components by default, client components only when needed
+- Implement proper error boundaries and loading states
+- Use React Hook Form with Zod validation for forms
+- Use Supabase client for database queries and real-time subscriptions
+- Follow mobile-first responsive design
+- Implement proper SEO with Next.js metadata API
+
+### Common Commands
+```bash
+# Install Shadcn components
+npx shadcn@latest add [component-name]
+
+# Development
+npm run dev
+npm run build
+```
+
+### Important Notes
+- Always await params in page components (Next.js 15 requirement)
+- Use Supabase client for database operations and auth
+- No RLS policies - use service key for admin operations
+- Store business logos and QR codes in Supabase Storage
+- Mark client components with 'use client' directive
+- Implement proper loading and error states
+- Focus on mobile responsiveness and PWA features
+
+## Priority Features
+1. Core review form functionality
+2. Rating-based routing logic
+3. Basic admin dashboard with analytics
+4. Link sharing and QR code generation
+5. Mobile optimization and PWA setup

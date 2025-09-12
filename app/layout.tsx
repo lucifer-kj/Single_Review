@@ -1,33 +1,49 @@
-import type React from "react"
-import { Inter, JetBrains_Mono } from "next/font/google"
-import "./globals.css"
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({
+const geistSans = Geist({
+  variable: "--font-geist-sans",
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-})
+});
 
-const jetbrainsMono = JetBrains_Mono({
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-jetbrains-mono",
-})
+});
 
-export const metadata = {
-  title: "InvoiceFlow - Professional Invoice Management",
-  description: "Streamline your invoicing process with InvoiceFlow PWA",
-    generator: 'v0.app'
-}
+export const metadata: Metadata = {
+  title: "Crux - Professional Review Management",
+  description: "Intelligently route customer feedback based on ratings. High ratings redirect to Google Business reviews, while low ratings collect private feedback.",
+  keywords: ["review management", "customer feedback", "business reviews", "rating system"],
+  authors: [{ name: "Alpha Business Digital" }],
+  viewport: "width=device-width, initial-scale=1",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" }
+  ],
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png"
+  }
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-      <body className="min-h-screen bg-background font-sans">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
+        {children}
+      </body>
     </html>
-  )
+  );
 }
