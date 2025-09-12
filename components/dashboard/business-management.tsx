@@ -185,19 +185,52 @@ export function BusinessManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Your Businesses</h2>
+          <h2 className="text-2xl font-bold">Business Management</h2>
           <p className="text-muted-foreground">
-            Manage your business profiles and review settings
+            Manage your business profiles and sharing settings
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="mobile-button">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Business
-        </Button>
+        {activeTab === 'businesses' && (
+          <Button onClick={() => setShowForm(true)} className="mobile-button">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Business
+          </Button>
+        )}
       </div>
 
-      {/* Businesses Grid */}
-      {businesses.length === 0 ? (
+      {/* Tab Navigation */}
+      <div className="border-b">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('businesses')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'businesses'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
+            }`}
+          >
+            <Building2 className="w-4 h-4 mr-2 inline" />
+            Businesses
+          </button>
+          <button
+            onClick={() => setActiveTab('sharing')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'sharing'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
+            }`}
+          >
+            <Share2 className="w-4 h-4 mr-2 inline" />
+            Sharing & Analytics
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'businesses' && (
+        <>
+          {/* Businesses Grid */}
+          {businesses.length === 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>No Businesses Yet</CardTitle>
@@ -345,6 +378,89 @@ export function BusinessManagement() {
               </CardContent>
             </Card>
           ))}
+        </div>
+          )}
+        </>
+      )}
+
+      {/* Sharing Tab Content */}
+      {activeTab === 'sharing' && (
+        <div className="space-y-6">
+          {businesses.length === 0 ? (
+            <Card>
+              <CardContent className="py-12">
+                <div className="text-center">
+                  <Share2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Businesses to Share</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create a business first to start sharing review links
+                  </p>
+                  <Button onClick={() => setActiveTab('businesses')}>
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Manage Businesses
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {/* Business Selector */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Select Business</CardTitle>
+                  <CardDescription>
+                    Choose a business to view sharing options and analytics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {businesses.map((business) => (
+                      <Card 
+                        key={business.id} 
+                        className={`cursor-pointer transition-colors ${
+                          selectedBusiness?.id === business.id 
+                            ? 'ring-2 ring-primary' 
+                            : 'hover:bg-muted/50'
+                        }`}
+                        onClick={() => setSelectedBusiness(business)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="w-10 h-10">
+                              <AvatarImage src={business.logo_url || undefined} />
+                              <AvatarFallback className="bg-muted">
+                                <Building2 className="w-5 h-5" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium truncate">{business.name}</h4>
+                              <p className="text-sm text-muted-foreground">
+                                {business.reviews_count || 0} reviews
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Sharing Panel */}
+              {selectedBusiness && (
+                <SharePanel
+                  businessId={selectedBusiness.id}
+                  businessName={selectedBusiness.name}
+                  reviewUrl={getReviewUrl(selectedBusiness.id)}
+                />
+              )}
+
+              {/* Analytics */}
+              {selectedBusiness && (
+                <SharingAnalytics businessId={selectedBusiness.id} />
+              )}
+            </div>
+          )}
         </div>
       )}
 
