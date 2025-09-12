@@ -1,119 +1,98 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { 
+  LayoutDashboard, 
+  Building2, 
   Star, 
   BarChart3, 
-  Settings, 
-  Plus, 
-  LogOut,
-  Menu,
+  Settings,
   X
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from 'lucide-react';
+import { useUIStore } from '@/stores/store';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'Reviews', href: '/dashboard/reviews', icon: Star },
-  { name: 'Businesses', href: '/dashboard/businesses', icon: Settings },
-]
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Businesses', href: '/businesses', icon: Building2 },
+  { name: 'Reviews', href: '/reviews', icon: Star },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Settings', href: '/settings', icon: Settings },
+];
 
-export function DashboardSidebar() {
-  const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
-  const supabase = createClient()
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/auth/signin'
-  }
+export function Sidebar() {
+  const pathname = usePathname();
+  const { sidebarOpen, setSidebarOpen } = useUIStore();
 
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsOpen(!isOpen)}
-          className="mobile-touch-target"
-        >
-          {isOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </Button>
-      </div>
-
-      {/* Sidebar */}
+      {/* Mobile sidebar */}
       <div className={cn(
-        'fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:translate-x-0',
-        isOpen ? 'translate-x-0' : '-translate-x-full'
+        'fixed inset-0 z-50 lg:hidden',
+        sidebarOpen ? 'block' : 'hidden'
       )}>
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center px-6 py-4 border-b border-border">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Star className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="ml-2 text-xl font-bold">Crux</span>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors mobile-touch-target',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  )}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* Add Business Button */}
-          <div className="px-4 py-4 border-t border-border">
-            <Button asChild className="w-full">
-              <Link href="/dashboard/businesses/new">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Business
-              </Link>
-            </Button>
-          </div>
-
-          {/* Sign Out */}
-          <div className="px-4 py-4 border-t border-border">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-background border-r">
+          <div className="flex h-16 items-center justify-between px-4">
+            <h1 className="text-xl font-bold">Crux</h1>
             <Button
-              variant="outline"
-              onClick={handleSignOut}
-              className="w-full"
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(false)}
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+              <X className="h-5 w-5" />
             </Button>
           </div>
+          <nav className="px-4 py-4">
+            <NavigationItems pathname={pathname} />
+          </nav>
         </div>
       </div>
 
-      {/* Overlay for mobile */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Desktop sidebar */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-background border-r px-6 pb-4">
+          <div className="flex h-16 shrink-0 items-center">
+            <h1 className="text-xl font-bold">Crux</h1>
+          </div>
+          <nav className="flex flex-1 flex-col">
+            <NavigationItems pathname={pathname} />
+          </nav>
+        </div>
+      </div>
     </>
-  )
+  );
+}
+
+function NavigationItems({ pathname }: { pathname: string }) {
+  return (
+    <ul role="list" className="flex flex-1 flex-col gap-y-7">
+      <li>
+        <ul role="list" className="-mx-2 space-y-1">
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <li key={item.name}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold transition-colors',
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {item.name}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </li>
+    </ul>
+  );
 }

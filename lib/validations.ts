@@ -1,33 +1,79 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Review form validation
 export const reviewFormSchema = z.object({
-  customerName: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
-  customerPhone: z.string().optional(),
-  rating: z.number().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
-  feedback: z.string().optional(),
-  businessId: z.string().min(1, 'Business ID is required'),
-})
-
-export type ReviewFormData = z.infer<typeof reviewFormSchema>
+  business_id: z.string().uuid('Invalid business ID'),
+  customer_name: z
+    .string()
+    .min(1, 'Customer name is required')
+    .max(100, 'Customer name must be less than 100 characters'),
+  customer_phone: z
+    .string()
+    .optional()
+    .refine(
+      (phone) => {
+        if (!phone) return true;
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+      },
+      'Please enter a valid phone number'
+    ),
+  rating: z
+    .number()
+    .min(1, 'Rating must be at least 1')
+    .max(5, 'Rating must be at most 5'),
+  comment: z
+    .string()
+    .max(500, 'Comment must be less than 500 characters')
+    .optional(),
+});
 
 // Business form validation
 export const businessFormSchema = z.object({
-  name: z.string().min(1, 'Business name is required').max(100, 'Business name is too long'),
-  description: z.string().optional(),
-  website: z.string().url('Invalid website URL').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  address: z.string().optional(),
-  googleReviewUrl: z.string().url('Invalid Google review URL').optional().or(z.literal('')),
-})
-
-export type BusinessFormData = z.infer<typeof businessFormSchema>
+  name: z
+    .string()
+    .min(1, 'Business name is required')
+    .max(100, 'Business name must be less than 100 characters'),
+  description: z
+    .string()
+    .max(500, 'Description must be less than 500 characters')
+    .optional(),
+  logo_url: z.string().url('Please enter a valid URL').optional(),
+  google_business_url: z.string().url('Please enter a valid URL').optional(),
+});
 
 // User profile validation
 export const userProfileSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
-  email: z.string().email('Invalid email'),
-})
+  full_name: z
+    .string()
+    .min(1, 'Full name is required')
+    .max(100, 'Full name must be less than 100 characters'),
+  email: z.string().email('Please enter a valid email address'),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (phone) => {
+        if (!phone) return true;
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+      },
+      'Please enter a valid phone number'
+    ),
+});
 
-export type UserProfileData = z.infer<typeof userProfileSchema>
+// Analytics filter validation
+export const analyticsFilterSchema = z.object({
+  business_id: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  metric_type: z
+    .enum(['review_submitted', 'google_redirect', 'internal_feedback'])
+    .optional(),
+});
+
+// Export types
+export type ReviewFormData = z.infer<typeof reviewFormSchema>;
+export type BusinessFormData = z.infer<typeof businessFormSchema>;
+export type UserProfileData = z.infer<typeof userProfileSchema>;
+export type AnalyticsFilterData = z.infer<typeof analyticsFilterSchema>;

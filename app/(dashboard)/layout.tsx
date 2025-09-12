@@ -1,21 +1,22 @@
-import { requireAuth } from '@/lib/auth'
-import { DashboardSidebar } from '@/components/dashboard/sidebar'
+import { Sidebar } from '@/components/dashboard/sidebar';
+import { Header } from '@/components/dashboard/header';
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  await requireAuth()
-
   return (
     <div className="min-h-screen bg-background">
-      <DashboardSidebar />
-      <main className="lg:pl-64">
-        <div className="mobile-container py-8">
-          {children}
-        </div>
-      </main>
+      <Sidebar />
+      <div className="lg:pl-64">
+        <Header />
+        <main className="py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
-  )
+  );
 }

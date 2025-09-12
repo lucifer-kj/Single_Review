@@ -1,81 +1,107 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Star } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState } from 'react';
+import { Star } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
-  rating: number
-  onRatingChange?: (rating: number) => void
-  readonly?: boolean
-  size?: 'sm' | 'md' | 'lg'
-  className?: string
+  value: number;
+  onChange: (value: number) => void;
+  max?: number;
+  size?: 'sm' | 'md' | 'lg';
+  readonly?: boolean;
+  showLabel?: boolean;
 }
 
-export function StarRating({ 
-  rating, 
-  onRatingChange, 
-  readonly = false, 
+export function StarRating({
+  value,
+  onChange,
+  max = 5,
   size = 'md',
-  className 
+  readonly = false,
+  showLabel = true,
 }: StarRatingProps) {
-  const [hoveredRating, setHoveredRating] = useState(0)
+  const [hoverValue, setHoverValue] = useState(0);
 
   const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8'
-  }
+    sm: 'w-6 h-6',
+    md: 'w-8 h-8',
+    lg: 'w-10 h-10',
+  };
 
-  const handleClick = (newRating: number) => {
-    if (!readonly && onRatingChange) {
-      onRatingChange(newRating)
-    }
-  }
+  const labelClasses = {
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg',
+  };
 
-  const handleMouseEnter = (newRating: number) => {
+  const handleClick = (rating: number) => {
     if (!readonly) {
-      setHoveredRating(newRating)
+      onChange(rating);
     }
-  }
+  };
+
+  const handleMouseEnter = (rating: number) => {
+    if (!readonly) {
+      setHoverValue(rating);
+    }
+  };
 
   const handleMouseLeave = () => {
     if (!readonly) {
-      setHoveredRating(0)
+      setHoverValue(0);
     }
-  }
+  };
 
-  const displayRating = hoveredRating || rating
+  const getStarColor = (index: number) => {
+    const currentValue = hoverValue || value;
+    return currentValue > index ? 'text-yellow-400' : 'text-gray-300';
+  };
+
+  const getLabel = () => {
+    const currentValue = hoverValue || value;
+    const labels = {
+      1: 'Poor',
+      2: 'Fair',
+      3: 'Good',
+      4: 'Very Good',
+      5: 'Excellent',
+    };
+    return labels[currentValue as keyof typeof labels] || '';
+  };
 
   return (
-    <div className={cn('flex items-center gap-1', className)}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => handleClick(star)}
-          onMouseEnter={() => handleMouseEnter(star)}
-          onMouseLeave={handleMouseLeave}
-          disabled={readonly}
-          className={cn(
-            'transition-all duration-200 rounded focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-            !readonly && 'hover:scale-105 cursor-pointer',
-            readonly && 'cursor-default'
-          )}
-          aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
-        >
-          <Star
+    <div className="flex flex-col items-center space-y-2">
+      <div className="flex space-x-1">
+        {Array.from({ length: max }, (_, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => handleClick(index + 1)}
+            onMouseEnter={() => handleMouseEnter(index + 1)}
+            onMouseLeave={handleMouseLeave}
+            disabled={readonly}
             className={cn(
-              sizeClasses[size],
-              'transition-colors duration-200',
-              star <= displayRating
-                ? 'fill-star-filled text-star-filled'
-                : 'fill-star-empty text-star-empty',
-              !readonly && hoveredRating === star && 'text-star-hover'
+              'transition-colors duration-150',
+              !readonly && 'hover:scale-110',
+              readonly && 'cursor-default'
             )}
-          />
-        </button>
-      ))}
+          >
+            <Star
+              className={cn(
+                sizeClasses[size],
+                getStarColor(index),
+                'fill-current'
+              )}
+            />
+          </button>
+        ))}
+      </div>
+      {showLabel && (hoverValue > 0 || value > 0) && (
+        <p className={cn('font-medium text-muted-foreground', labelClasses[size])}>
+          {getLabel()}
+        </p>
+      )}
     </div>
-  )
+  );
 }

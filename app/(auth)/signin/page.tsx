@@ -1,6 +1,6 @@
-import { SignInForm } from "@/components/auth/signin-form"
-import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Star } from "lucide-react"
+import { SignInForm } from '@/components/auth/signin-form';
+import { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Star } from 'lucide-react';
 
 export default function SignInPage() {
   return (
@@ -23,5 +23,5 @@ export default function SignInPage() {
         </div>
       </CardContent>
     </>
-  )
+  );
 }

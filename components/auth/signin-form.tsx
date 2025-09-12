@@ -1,39 +1,39 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { AlertCircle, Mail, Lock } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { AlertCircle, Mail, Lock } from 'lucide-react';
 
 export function SignInForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
 
   useEffect(() => {
     try {
-      const client = createClient()
-      setSupabase(client)
+      const client = createClient();
+      setSupabase(client);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize authentication'
-      setError(errorMessage)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize authentication';
+      setError(errorMessage);
     }
-  }, [])
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
 
     if (!supabase) {
-      setError('Authentication service is not available. Please check your configuration.')
-      setIsLoading(false)
-      return
+      setError('Authentication service is not available. Please check your configuration.');
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -44,37 +44,37 @@ export function SignInForm() {
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`
           }
-        })
+        });
         
-        if (error) throw error
+        if (error) throw error;
         
-        alert('Check your email for the confirmation link!')
+        alert('Check your email for the confirmation link!');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
-        })
+        });
         
-        if (error) throw error
+        if (error) throw error;
         
-        window.location.href = '/dashboard'
+        window.location.href = '/dashboard';
       }
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
-      setError(errorMessage)
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    setError('')
+    setIsLoading(true);
+    setError('');
 
     if (!supabase) {
-      setError('Authentication service is not available. Please check your configuration.')
-      setIsLoading(false)
-      return
+      setError('Authentication service is not available. Please check your configuration.');
+      setIsLoading(false);
+      return;
     }
 
     try {
@@ -83,15 +83,15 @@ export function SignInForm() {
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
-      })
+      });
       
-      if (error) throw error
+      if (error) throw error;
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred'
-      setError(errorMessage)
-      setIsLoading(false)
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      setError(errorMessage);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -175,5 +175,5 @@ export function SignInForm() {
         </button>
       </div>
     </div>
-  )
+  );
 }

@@ -1,10 +1,8 @@
-# Environment Setup Guide
-
-This project requires Supabase environment variables to function properly. Follow these steps to set up your environment:
-
-## Required Environment Variables
+# Environment Variables Setup
 
 Create a `.env.local` file in the root directory with the following variables:
+
+## Required Variables
 
 ```bash
 # Supabase Configuration
@@ -17,6 +15,13 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # Next.js Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your_nextauth_secret
+
+# App Configuration
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_NAME=Crux Review Management
+
+# Optional: Analytics
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your_google_analytics_id
 ```
 
 ## Getting Supabase Credentials
@@ -29,28 +34,9 @@ NEXTAUTH_SECRET=your_nextauth_secret
    - **anon public** key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (optional)
 
-## Example .env.local
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTY0NTQwNzI5MCwiZXhwIjoxOTYwOTgzMjkwfQ.example-signature
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoic2VydmljZV9yb2xlIiwiaWF0IjoxNjQ1NDA3MjkwLCJleHAiOjE5NjA5ODMyOTB9.example-signature
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-key-here
-```
-
 ## Important Notes
 
 - Never commit `.env.local` to version control
 - The `NEXT_PUBLIC_` prefix makes variables available in the browser
 - Without these variables, the app will show authentication errors
 - The build process will fail if these variables are missing
-
-## Troubleshooting
-
-If you see errors about missing Supabase environment variables:
-
-1. Ensure `.env.local` exists in the project root
-2. Verify all required variables are set
-3. Restart your development server after adding variables
-4. Check that variable names match exactly (case-sensitive)

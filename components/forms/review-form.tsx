@@ -1,199 +1,224 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { reviewFormSchema, type ReviewFormData } from '@/lib/validations'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { StarRating } from '@/components/ui/star-rating'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle, ExternalLink, MessageSquare } from 'lucide-react'
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { reviewFormSchema, type ReviewFormData } from '@/lib/validations';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { StarRating } from '@/components/ui/star-rating';
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase';
 
-interface ReviewFormProps {
-  businessId: string
-  googleReviewUrl?: string | null
+interface Business {
+  id: string;
+  name: string;
+  brand_color: string;
+  thank_you_message: string;
+  google_business_url?: string;
 }
 
-export function ReviewForm({ businessId, googleReviewUrl }: ReviewFormProps) {
-  const [rating, setRating] = useState(0)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+interface ReviewFormProps {
+  businessId: string;
+  business?: Business;
+}
+
+export function ReviewForm({ businessId, business }: ReviewFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
+  
+  const supabase = createClient();
+  
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
-    setValue
   } = useForm<ReviewFormData>({
     resolver: zodResolver(reviewFormSchema),
     defaultValues: {
+      business_id: businessId,
+      customer_name: '',
+      customer_phone: '',
       rating: 0,
-    }
-  })
+      comment: '',
+    },
+  });
+
+  const rating = watch('rating');
 
   const onSubmit = async (data: ReviewFormData) => {
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+    setSubmitError('');
+
     try {
-      const response = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          rating,
-          businessId,
-        }),
-      })
+      // Submit review to database
+      const { data: review, error } = await supabase
+        .from('reviews')
+        .insert({
+          business_id: businessId,
+          customer_name: data.customer_name,
+          customer_phone: data.customer_phone || null,
+          rating: data.rating,
+          comment: data.comment || null,
+          is_public: data.rating >= 4,
+        })
+        .select()
+        .single();
 
-      if (response.ok) {
-        setIsSubmitted(true)
-        
-        // Smart routing logic
-        if (rating >= 4 && googleReviewUrl) {
-          // High rating - redirect to Google Reviews
-          setTimeout(() => {
-            window.open(googleReviewUrl, '_blank')
-          }, 2000)
+      if (error) throw error;
+
+      setIsSuccess(true);
+
+      // Smart routing based on rating
+      setTimeout(() => {
+        if (data.rating >= 4) {
+          // High rating - redirect to Google Business Profile
+          if (business?.google_business_url) {
+            window.location.href = business.google_business_url;
+          } else {
+            window.location.href = `https://g.page/r/${business?.name?.replace(/\s+/g, '-').toLowerCase()}/review`;
+          }
+        } else {
+          // Low rating - redirect to internal feedback page
+          window.location.href = `/feedback/${businessId}?reviewId=${review.id}`;
         }
-        // Low rating - stays on page for private feedback collection
-      } else {
-        throw new Error('Failed to submit review')
-      }
-    } catch (error) {
-      console.error('Error submitting review:', error)
-      alert('Failed to submit review. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+      }, 2000);
 
-  if (isSubmitted) {
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setSubmitError('Failed to submit review. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isSuccess) {
     return (
-      <Card className="text-center fade-in">
-        <CardHeader>
-          <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-success" />
-          </div>
-          <CardTitle>Thank You!</CardTitle>
-          <CardDescription>
-            Your feedback has been submitted successfully.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {rating >= 4 && googleReviewUrl ? (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Redirecting you to Google Reviews to share your positive experience...
-              </p>
-              <Button 
-                onClick={() => window.open(googleReviewUrl, '_blank')}
-                className="w-full"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Continue to Google Reviews
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Your private feedback has been received. We&apos;ll use it to improve our service.
-              </p>
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto">
-                <MessageSquare className="w-6 h-6 text-primary" />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    )
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold text-green-600">Thank you!</h3>
+          <p className="text-sm text-muted-foreground">
+            {business?.thank_you_message || (
+              rating >= 4 
+                ? 'Redirecting you to Google to share your positive review...'
+                : 'Redirecting you to provide additional feedback...'
+            )}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Card className="fade-in">
-      <CardHeader>
-        <CardTitle>Share Your Experience</CardTitle>
-        <CardDescription>
-          Your feedback helps us improve our service
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Star Rating */}
-          <div className="space-y-2">
-            <Label htmlFor="rating">Rating</Label>
-            <div className="flex justify-center">
-              <StarRating
-                rating={rating}
-                onRatingChange={(newRating) => {
-                  setRating(newRating)
-                  setValue('rating', newRating)
-                }}
-                size="lg"
-              />
-            </div>
-            {errors.rating && (
-              <p className="text-sm text-destructive">{errors.rating.message}</p>
-            )}
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {submitError && (
+        <div className="flex items-center space-x-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+          <AlertCircle className="w-4 h-4" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
-          {/* Customer Name */}
-          <div className="space-y-2">
-            <Label htmlFor="customerName">Your Name</Label>
-            <Input
-              id="customerName"
-              {...register('customerName')}
-              placeholder="Enter your name"
-              className="mobile-touch-target"
-            />
-            {errors.customerName && (
-              <p className="text-sm text-destructive">{errors.customerName.message}</p>
-            )}
-          </div>
+      {/* Customer Name */}
+      <div className="space-y-2">
+        <Label htmlFor="customer_name">Your Name *</Label>
+        <Input
+          id="customer_name"
+          {...register('customer_name')}
+          placeholder="Enter your full name"
+          className="mobile-touch-target"
+        />
+        {errors.customer_name && (
+          <p className="text-sm text-destructive">{errors.customer_name.message}</p>
+        )}
+      </div>
 
-          {/* Customer Phone */}
-          <div className="space-y-2">
-            <Label htmlFor="customerPhone">Phone Number (Optional)</Label>
-            <Input
-              id="customerPhone"
-              type="tel"
-              {...register('customerPhone')}
-              placeholder="Enter your phone number"
-              className="mobile-touch-target"
-            />
-            {errors.customerPhone && (
-              <p className="text-sm text-destructive">{errors.customerPhone.message}</p>
-            )}
-          </div>
+      {/* Customer Phone */}
+      <div className="space-y-2">
+        <Label htmlFor="customer_phone">Phone Number (Optional)</Label>
+        <Input
+          id="customer_phone"
+          type="tel"
+          {...register('customer_phone')}
+          placeholder="Enter your phone number"
+          className="mobile-touch-target"
+        />
+        {errors.customer_phone && (
+          <p className="text-sm text-destructive">{errors.customer_phone.message}</p>
+        )}
+      </div>
 
-          {/* Feedback */}
-          <div className="space-y-2">
-            <Label htmlFor="feedback">Additional Comments (Optional)</Label>
-            <Textarea
-              id="feedback"
-              {...register('feedback')}
-              placeholder="Tell us about your experience..."
-              rows={4}
-              className="resize-none"
-            />
-            {errors.feedback && (
-              <p className="text-sm text-destructive">{errors.feedback.message}</p>
-            )}
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full mobile-touch-target" 
-            disabled={isSubmitting || rating === 0}
+      {/* Star Rating */}
+      <div className="space-y-2">
+        <Label>How would you rate your experience? *</Label>
+        <div className="flex justify-center">
+          <StarRating
+            value={rating}
+            onChange={(value) => setValue('rating', value)}
             size="lg"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Review'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
+          />
+        </div>
+        {errors.rating && (
+          <p className="text-sm text-destructive text-center">{errors.rating.message}</p>
+        )}
+      </div>
+
+      {/* Comment */}
+      <div className="space-y-2">
+        <Label htmlFor="comment">Tell us about your experience (Optional)</Label>
+        <Textarea
+          id="comment"
+          {...register('comment')}
+          placeholder="Share details about your experience..."
+          rows={4}
+          className="mobile-touch-target"
+        />
+        {errors.comment && (
+          <p className="text-sm text-destructive">{errors.comment.message}</p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        className="w-full mobile-touch-target"
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Submitting...
+          </>
+        ) : (
+          'Submit Review'
+        )}
+      </Button>
+
+      {/* Privacy Notice */}
+      <div className="text-center text-xs text-muted-foreground">
+        <p>
+          By submitting this review, you agree to our Terms of Service and Privacy Policy.
+          {rating >= 4 && rating > 0 && (
+            <span className="block mt-1 text-green-600">
+              High ratings will be shared on Google Business Profile.
+            </span>
+          )}
+          {rating < 4 && rating > 0 && (
+            <span className="block mt-1 text-orange-600">
+              Lower ratings will be kept private for internal improvement.
+            </span>
+          )}
+        </p>
+      </div>
+    </form>
+  );
 }

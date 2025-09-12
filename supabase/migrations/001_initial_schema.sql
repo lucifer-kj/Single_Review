@@ -1,187 +1,199 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create custom types
-CREATE TYPE review_status AS ENUM ('PENDING', 'PROCESSED', 'PUBLISHED', 'REJECTED');
-
--- Users table (managed by Supabase Auth)
--- Note: Supabase Auth automatically creates auth.users table
--- We'll create a public profiles table to store additional user data
-
--- Profiles table to extend auth.users
-CREATE TABLE public.profiles (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  image TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Businesses table
-CREATE TABLE public.businesses (
+-- Create businesses table
+CREATE TABLE businesses (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  name TEXT NOT NULL,
+  name VARCHAR(100) NOT NULL,
   description TEXT,
-  logo TEXT,
-  website TEXT,
-  phone TEXT,
-  email TEXT,
-  address TEXT,
-  google_review_url TEXT,
-  qr_code_url TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
+  logo_url TEXT,
+  google_business_url TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Reviews table
-CREATE TABLE public.reviews (
+-- Create reviews table
+CREATE TABLE reviews (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  business_id UUID REFERENCES public.businesses(id) ON DELETE CASCADE NOT NULL,
-  customer_name TEXT NOT NULL,
-  customer_phone TEXT,
+  business_id UUID REFERENCES businesses(id) ON DELETE CASCADE NOT NULL,
+  customer_name VARCHAR(100) NOT NULL,
+  customer_phone VARCHAR(20),
   rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
-  feedback TEXT,
-  is_public BOOLEAN DEFAULT FALSE,
-  status review_status DEFAULT 'PENDING',
-  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  processed_at TIMESTAMP WITH TIME ZONE
+  comment TEXT,
+  is_public BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Analytics table
-CREATE TABLE public.analytics (
+-- Create analytics table
+CREATE TABLE analytics (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  business_id UUID REFERENCES public.businesses(id) ON DELETE CASCADE NOT NULL,
-  date DATE DEFAULT CURRENT_DATE NOT NULL,
-  total_reviews INTEGER DEFAULT 0,
-  average_rating DECIMAL(3,2) DEFAULT 0,
-  high_ratings INTEGER DEFAULT 0,
-  low_ratings INTEGER DEFAULT 0,
-  google_redirects INTEGER DEFAULT 0,
-  private_feedback INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(business_id, date)
+  business_id UUID REFERENCES businesses(id) ON DELETE CASCADE NOT NULL,
+  metric_type VARCHAR(50) NOT NULL CHECK (metric_type IN ('review_submitted', 'google_redirect', 'internal_feedback')),
+  value INTEGER DEFAULT 1,
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_businesses_user_id ON public.businesses(user_id);
-CREATE INDEX idx_reviews_business_id ON public.reviews(business_id);
-CREATE INDEX idx_reviews_submitted_at ON public.reviews(submitted_at);
-CREATE INDEX idx_analytics_business_id ON public.analytics(business_id);
-CREATE INDEX idx_analytics_date ON public.analytics(date);
+CREATE INDEX idx_businesses_user_id ON businesses(user_id);
+CREATE INDEX idx_reviews_business_id ON reviews(business_id);
+CREATE INDEX idx_reviews_created_at ON reviews(created_at);
+CREATE INDEX idx_analytics_business_id ON analytics(business_id);
+CREATE INDEX idx_analytics_metric_type ON analytics(metric_type);
+CREATE INDEX idx_analytics_created_at ON analytics(created_at);
 
--- Row Level Security (RLS) policies
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.businesses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.analytics ENABLE ROW LEVEL SECURITY;
-
--- Profiles policies
-CREATE POLICY "Users can view own profile" ON public.profiles
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile" ON public.profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Businesses policies
-CREATE POLICY "Users can view own businesses" ON public.businesses
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own businesses" ON public.businesses
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own businesses" ON public.businesses
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own businesses" ON public.businesses
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Reviews policies
-CREATE POLICY "Anyone can insert reviews" ON public.reviews
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Business owners can view their reviews" ON public.reviews
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.businesses 
-      WHERE businesses.id = reviews.business_id 
-      AND businesses.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Business owners can update their reviews" ON public.reviews
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.businesses 
-      WHERE businesses.id = reviews.business_id 
-      AND businesses.user_id = auth.uid()
-    )
-  );
-
--- Analytics policies
-CREATE POLICY "Business owners can view their analytics" ON public.analytics
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.businesses 
-      WHERE businesses.id = analytics.business_id 
-      AND businesses.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Business owners can insert their analytics" ON public.analytics
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.businesses 
-      WHERE businesses.id = analytics.business_id 
-      AND businesses.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Business owners can update their analytics" ON public.analytics
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.businesses 
-      WHERE businesses.id = analytics.business_id 
-      AND businesses.user_id = auth.uid()
-    )
-  );
-
--- Function to automatically create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
+-- Create updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, name, image)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'avatar_url');
-  RETURN NEW;
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ language 'plpgsql';
 
--- Trigger to create profile on user signup
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+-- Create triggers for updated_at
+CREATE TRIGGER update_businesses_updated_at BEFORE UPDATE ON businesses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Enable Row Level Security
+ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for businesses
+CREATE POLICY "Users can view their own businesses" ON businesses
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own businesses" ON businesses
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own businesses" ON businesses
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own businesses" ON businesses
+    FOR DELETE USING (auth.uid() = user_id);
+
+-- Create RLS policies for reviews
+CREATE POLICY "Business owners can view their reviews" ON reviews
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = reviews.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Anyone can insert reviews" ON reviews
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Business owners can update their reviews" ON reviews
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = reviews.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Business owners can delete their reviews" ON reviews
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = reviews.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+-- Create RLS policies for analytics
+CREATE POLICY "Business owners can view their analytics" ON analytics
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = analytics.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Business owners can insert their analytics" ON analytics
+    FOR INSERT WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = analytics.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Business owners can update their analytics" ON analytics
+    FOR UPDATE USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = analytics.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Business owners can delete their analytics" ON analytics
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM businesses 
+            WHERE businesses.id = analytics.business_id 
+            AND businesses.user_id = auth.uid()
+        )
+    );
+
+-- Create function to automatically create analytics entries
+CREATE OR REPLACE FUNCTION create_review_analytics()
 RETURNS TRIGGER AS $$
 BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
+    -- Insert analytics entry for review submission
+    INSERT INTO analytics (business_id, metric_type, value, metadata)
+    VALUES (
+        NEW.business_id,
+        'review_submitted',
+        1,
+        jsonb_build_object(
+            'rating', NEW.rating,
+            'customer_name', NEW.customer_name,
+            'is_public', NEW.is_public
+        )
+    );
+    
+    -- If rating >= 4, also create google_redirect analytics
+    IF NEW.rating >= 4 THEN
+        INSERT INTO analytics (business_id, metric_type, value, metadata)
+        VALUES (
+            NEW.business_id,
+            'google_redirect',
+            1,
+            jsonb_build_object(
+                'rating', NEW.rating,
+                'customer_name', NEW.customer_name
+            )
+        );
+    ELSE
+        -- If rating < 4, create internal_feedback analytics
+        INSERT INTO analytics (business_id, metric_type, value, metadata)
+        VALUES (
+            NEW.business_id,
+            'internal_feedback',
+            1,
+            jsonb_build_object(
+                'rating', NEW.rating,
+                'customer_name', NEW.customer_name
+            )
+        );
+    END IF;
+    
+    RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ language 'plpgsql';
 
--- Triggers for updated_at
-CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-CREATE TRIGGER update_businesses_updated_at BEFORE UPDATE ON public.businesses
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-CREATE TRIGGER update_analytics_updated_at BEFORE UPDATE ON public.analytics
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+-- Create trigger for automatic analytics creation
+CREATE TRIGGER create_review_analytics_trigger
+    AFTER INSERT ON reviews
+    FOR EACH ROW EXECUTE FUNCTION create_review_analytics();

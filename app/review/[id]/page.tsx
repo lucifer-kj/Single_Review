@@ -1,71 +1,79 @@
-import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase-server'
-import { ReviewForm } from '@/components/forms/review-form'
-import Image from 'next/image'
+import { notFound } from 'next/navigation';
+import { createClient } from '@/lib/supabase-server';
+import { ReviewForm } from '@/components/forms/review-form';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Building2 } from 'lucide-react';
+import Image from 'next/image';
 
-interface ReviewPageProps {
-  params: Promise<{ id: string }>
-}
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default async function ReviewPage({ params }: ReviewPageProps) {
-  const { id } = await params
+export default async function ReviewPage(props: PageProps) {
+  const { id } = await props.params;
   
-  const supabase = await createClient()
+  const supabase = await createClient();
   
-  const { data: business } = await supabase
+  // Fetch business data
+  const { data: business, error } = await supabase
     .from('businesses')
-    .select('id, name, description, logo, google_review_url')
+    .select('*')
     .eq('id', id)
-    .eq('is_active', true)
-    .single()
+    .single();
 
-  if (!business) {
-    notFound()
+  if (error || !business) {
+    notFound();
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mobile-container max-w-md mx-auto py-8">
-        <div className="text-center mb-8">
-          {business.logo && (
-            <Image 
-              src={business.logo} 
-              alt={`${business.name} logo`}
-              width={64}
-              height={64}
-              className="w-16 h-16 mx-auto mb-4 rounded-lg object-cover"
-            />
-          )}
-          <h1 className="text-2xl font-bold mb-2">Rate Your Experience</h1>
-          <p className="text-muted-foreground">
-            How was your experience with <strong>{business.name}</strong>?
-          </p>
-          {business.description && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {business.description}
-            </p>
-          )}
-        </div>
-        
-        <ReviewForm businessId={business.id} googleReviewUrl={business.google_review_url} />
-      </div>
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background: `linear-gradient(135deg, ${business.brand_color}15 0%, ${business.brand_color}08 100%)`
+      }}
+    >
+      <Card className="w-full max-w-md fade-in">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center mb-4">
+            <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
+              <AvatarImage src={business.logo_url || undefined} />
+              <AvatarFallback className="bg-muted">
+                <Building2 className="w-8 h-8" />
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <CardTitle 
+            className="text-2xl"
+            style={{ color: business.brand_color }}
+          >
+            {business.welcome_message || business.name}
+          </CardTitle>
+          <CardDescription>
+            {business.description || 'Share your experience with us'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ReviewForm businessId={id} business={business} />
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
 
-export async function generateMetadata({ params }: ReviewPageProps) {
-  const { id } = await params
+export async function generateMetadata(props: PageProps) {
+  const { id } = await props.params;
   
-  const supabase = await createClient()
+  const supabase = await createClient();
   
   const { data: business } = await supabase
     .from('businesses')
-    .select('name')
+    .select('name, description')
     .eq('id', id)
-    .single()
+    .single();
 
   return {
-    title: business ? `Review ${business.name}` : 'Review Form',
-    description: `Share your experience with ${business?.name || 'this business'}`,
-  }
+    title: business ? `Review ${business.name}` : 'Leave a Review',
+    description: business?.description || 'Share your experience with us',
+  };
 }
