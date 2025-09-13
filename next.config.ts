@@ -20,6 +20,16 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/dashboard",
+        permanent: true, // true = 308 Permanent Redirect (SEO friendly)
+      },
+    ];
+  },
 };
 
 export default nextConfig;
