@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Copy, X, Share2, Smartphone, Monitor } from 'lucide-react';
+import { Download, Copy, X, Smartphone } from 'lucide-react';
 import QRCode from 'qrcode';
 import { ShareDropdown } from '@/components/ui/share-dropdown';
+import Image from 'next/image';
+import { Input } from '@/components/ui/input';
 
 interface QRCodeData {
   url: string;
@@ -29,24 +31,53 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
     
     setLoading(true);
     try {
-      const dimensions = {
-        small: 128,
-        medium: 256,
-        large: 512,
-      };
+      // Extract business ID from URL
+      const urlParts = data.url.split('/');
+      const businessId = urlParts[urlParts.length - 1];
 
-      const qrCodeDataURL = await QRCode.toDataURL(data.url, {
-        width: dimensions[size],
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF',
+      // Use the new API to generate QR code with tracking
+      const response = await fetch('/api/qr-generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        errorCorrectionLevel: 'M',
+        body: JSON.stringify({
+          businessId,
+          size,
+          includeTracking: true,
+        }),
       });
-      setQrCodeUrl(qrCodeDataURL);
-    } catch (error) {
-      console.error('Error generating QR code:', error);
+
+      const result = await response.json();
+
+      if (result.success) {
+        setQrCodeUrl(result.qrCode);
+      } else {
+        throw new Error(result.error || 'Failed to generate QR code');
+      }
+    } catch {
+      console.log('Error generating QR code:');
+      // Fallback to client-side generation
+      try {
+        const dimensions = {
+          small: 128,
+          medium: 256,
+          large: 512,
+        };
+
+        const qrCodeDataURL = await QRCode.toDataURL(data.url, {
+          width: dimensions[size],
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF',
+          },
+          errorCorrectionLevel: 'M',
+        });
+        setQrCodeUrl(qrCodeDataURL);
+      } catch {
+        console.log('Fallback QR generation failed:');
+      }
     } finally {
       setLoading(false);
     }
@@ -65,8 +96,8 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
     if (!data) return;
     try {
       await navigator.clipboard.writeText(data.url);
-    } catch (error) {
-      console.error('Failed to copy URL:', error);
+    } catch {
+      console.log('Failed to copy URL:');
     }
   };
 
@@ -75,7 +106,7 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
     if (isOpen && data) {
       generateQRCode(qrSize);
     }
-  }, [isOpen, data, qrSize]);
+  }, [isOpen, data, qrSize, generateQRCode]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -122,10 +153,12 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
               </div>
             ) : qrCodeUrl ? (
               <div className="bg-white rounded-lg p-6 shadow-lg border">
-                <img 
+                <Image 
                   src={qrCodeUrl} 
                   alt={`QR Code for ${data?.businessName}`} 
                   className="w-full h-full max-w-sm"
+                  width={256}
+                  height={256}
                 />
               </div>
             ) : (
@@ -140,9 +173,9 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">Review URL:</label>
               <div className="flex items-center space-x-2">
-                <input
+                <Input
                   type="text"
-                  value={data.url}
+                  defaultValue={data.url}
                   readOnly
                   className="flex-1 px-3 py-2 text-sm border rounded-md bg-muted"
                 />

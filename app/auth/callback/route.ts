@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
       if (!error) {
         return NextResponse.redirect(`${origin}${next}`);
       }
-    } catch (error) {
-      console.error('Error in auth callback:', error);
+    } catch {
+      console.error('Error in auth callback:');
     }
   }
 

@@ -17,8 +17,6 @@ import {
   Twitter, 
   Linkedin,
   Smartphone,
-  Monitor,
-  Download
 } from 'lucide-react';
 import { ShareDropdown } from '@/components/ui/share-dropdown';
 import { QRModal } from '@/components/ui/qr-modal';
@@ -39,8 +37,8 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
       await navigator.clipboard.writeText(reviewUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy URL:', error);
+    } catch {
+      console.log('Failed to copy URL:');
     }
   };
 
@@ -49,13 +47,35 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
       await navigator.clipboard.writeText(customMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Failed to copy message:', error);
+    } catch {
+      console.log('Failed to copy message:');
+    }
+  };
+
+  const trackShare = async (source: string, method: string) => {
+    try {
+      await fetch('/api/analytics/link-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          business_id: businessId,
+          link_type: 'social_share',
+          source: source,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer,
+          metadata: { method }
+        }),
+      });
+    } catch {
+      console.log('Failed to track share:');
     }
   };
 
   const shareViaWhatsApp = () => {
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(customMessage)}`;
+    trackShare('whatsapp', 'direct');
     window.open(whatsappUrl, '_blank');
   };
 
@@ -63,11 +83,13 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
     const subject = encodeURIComponent(`Share your experience with ${businessName}`);
     const body = encodeURIComponent(customMessage);
     const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+    trackShare('email', 'direct');
     window.location.href = mailtoUrl;
   };
 
   const shareViaSMS = () => {
     const smsUrl = `sms:?body=${encodeURIComponent(customMessage)}`;
+    trackShare('sms', 'direct');
     window.location.href = smsUrl;
   };
 
@@ -95,7 +117,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
             <div className="flex items-center space-x-2">
               <Input
                 id="review-url"
-                value={reviewUrl}
+                defaultValue={reviewUrl}
                 readOnly
                 className="font-mono text-sm"
               />
@@ -132,7 +154,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
             <Label htmlFor="custom-message">Message</Label>
             <Textarea
               id="custom-message"
-              value={customMessage}
+              defaultValue={customMessage}
               onChange={(e) => setCustomMessage(e.target.value)}
               rows={4}
               className="resize-none"
@@ -175,6 +197,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
               size="sm"
               onClick={() => {
                 const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(reviewUrl)}`;
+                trackShare('facebook', 'quick_share');
                 window.open(facebookUrl, '_blank', 'width=600,height=400');
               }}
               className="flex items-center space-x-2"
@@ -188,6 +211,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
               size="sm"
               onClick={() => {
                 const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Review ${businessName}`)}&url=${encodeURIComponent(reviewUrl)}`;
+                trackShare('twitter', 'quick_share');
                 window.open(twitterUrl, '_blank', 'width=600,height=400');
               }}
               className="flex items-center space-x-2"
@@ -201,6 +225,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
               size="sm"
               onClick={() => {
                 const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(reviewUrl)}`;
+                trackShare('linkedin', 'quick_share');
                 window.open(linkedinUrl, '_blank', 'width=600,height=400');
               }}
               className="flex items-center space-x-2"
@@ -214,6 +239,7 @@ export function SharePanel({ businessId, businessName, reviewUrl }: SharePanelPr
               size="sm"
               onClick={() => {
                 const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`Check out ${businessName}: ${reviewUrl}`)}`;
+                trackShare('whatsapp', 'quick_share');
                 window.open(whatsappUrl, '_blank');
               }}
               className="flex items-center space-x-2"

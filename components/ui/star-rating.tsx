@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface StarRatingProps {
   value: number;
-  onChange: (value: number) => void;
+  onChange: (rating: number) => void;
   max?: number;
   size?: 'sm' | 'md' | 'lg';
   readonly?: boolean;
@@ -21,15 +21,15 @@ export function StarRating({
   readonly = false,
   showLabel = true,
 }: StarRatingProps) {
-  const [hoverValue, setHoverValue] = useState(0);
+  const [hoverValue, setHoverValue] = useState<number>(0);
 
-  const sizeClasses = {
+  const sizeClasses: Record<'sm' | 'md' | 'lg', string> = {
     sm: 'w-6 h-6',
     md: 'w-8 h-8',
     lg: 'w-10 h-10',
   };
 
-  const labelClasses = {
+  const labelClasses: Record<'sm' | 'md' | 'lg', string> = {
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-lg',
@@ -60,42 +60,45 @@ export function StarRating({
 
   const getLabel = () => {
     const currentValue = hoverValue || value;
-    const labels = {
+    const labels: Record<number, string> = {
       1: 'Poor',
       2: 'Fair',
       3: 'Good',
       4: 'Very Good',
       5: 'Excellent',
     };
-    return labels[currentValue as keyof typeof labels] || '';
+    return labels[currentValue] ?? '';
   };
 
   return (
     <div className="flex flex-col items-center space-y-2">
       <div className="flex space-x-1">
-        {Array.from({ length: max }, (_, index) => (
-          <button
-            key={index}
-            type="button"
-            onClick={() => handleClick(index + 1)}
-            onMouseEnter={() => handleMouseEnter(index + 1)}
-            onMouseLeave={handleMouseLeave}
-            disabled={readonly}
-            className={cn(
-              'transition-colors duration-150',
-              !readonly && 'hover:scale-110',
-              readonly && 'cursor-default'
-            )}
-          >
-            <Star
+        {Array.from({ length: max }, (_, index) => {
+          const starValue = index + 1;
+          return (
+            <button
+              key={`star-${starValue}`}
+              type="button"
+              onClick={() => handleClick(starValue)}
+              onMouseEnter={() => handleMouseEnter(starValue)}
+              onMouseLeave={handleMouseLeave}
+              disabled={readonly}
               className={cn(
-                sizeClasses[size],
-                getStarColor(index),
-                'fill-current'
+                'transition-transform duration-150',
+                !readonly && 'hover:scale-110',
+                readonly && 'cursor-default'
               )}
-            />
-          </button>
-        ))}
+            >
+              <Star
+                className={cn(
+                  sizeClasses[size],
+                  getStarColor(index),
+                  'fill-current'
+                )}
+              />
+            </button>
+          );
+        })}
       </div>
       {showLabel && (hoverValue > 0 || value > 0) && (
         <p className={cn('font-medium text-muted-foreground', labelClasses[size])}>

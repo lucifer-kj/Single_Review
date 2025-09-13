@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase-server';
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest) { 
   try {
     const user = await getUser();
     
@@ -114,8 +114,7 @@ export async function GET(request: NextRequest) {
       businesses: businesses,
     });
 
-  } catch (error) {
-    console.error('Error fetching analytics:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

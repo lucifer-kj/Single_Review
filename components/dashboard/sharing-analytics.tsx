@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Loader2, Share2, QrCode, Link, TrendingUp, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Loader2, TrendingUp, Globe, Share, QrCode } from 'lucide-react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
 interface LinkAnalytics {
   total_clicks: number;
@@ -26,9 +26,6 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
   const [error, setError] = useState('');
   const [period, setPeriod] = useState('30');
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [businessId, period]);
 
   const fetchAnalytics = async () => {
     setLoading(true);
@@ -41,7 +38,7 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
       } else {
         setError(data.error || 'Failed to fetch analytics');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch analytics');
     } finally {
       setLoading(false);
@@ -76,7 +73,7 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
       <Card>
         <CardContent className="py-12">
           <div className="text-center">
-            <Share2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <Share className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">No Sharing Data Yet</h3>
             <p className="text-muted-foreground">
               Start sharing your review links to see analytics here
@@ -129,7 +126,7 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
@@ -145,8 +142,23 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">QR Code Scans</CardTitle>
+            <QrCode className="h-4 w-4 text-muted-foreground" />  
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {analytics.by_type['qr_code'] || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              QR code scans
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Source</CardTitle>
-            <Share2 className="h-4 w-4 text-muted-foreground" />
+            <Share className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -160,13 +172,15 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Link Types</CardTitle>
-            <Link className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Social Shares</CardTitle>
+            <Globe className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{typeData.length}</div>
+            <div className="text-2xl font-bold">
+              {analytics.by_type['social_share'] || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
-              Different link types used
+              Social media shares
             </p>
           </CardContent>
         </Card>
@@ -185,7 +199,7 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dailyData}>
+                <LineChart data={dailyData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis 
                     dataKey="date" 
@@ -205,12 +219,15 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
                       borderRadius: '6px',
                     }}
                   />
-                  <Bar 
+                  <Line 
+                    type="monotone" 
                     dataKey="count" 
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -233,15 +250,23 @@ export function SharingAnalytics({ businessId }: SharingAnalyticsProps) {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
                   >
                     {sourceData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
+  label={({ name, percent }: { name?: string; percent?: number }) => {
+    const labelName = name ?? '';
+    const labelPercent = percent ?? 0;
+    return `${labelName} ${(labelPercent * 100).toFixed(0)}%`;
+  }}
+  outerRadius={80}
+  dataKey={'value'}
+  {sourceData.map((entry, index) => (
+    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+  ))}
+/{'>'}
+
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>

@@ -42,8 +42,7 @@ export async function GET(
       business,
     });
 
-  } catch (error) {
-    console.error('Error fetching business:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -114,8 +113,7 @@ export async function PUT(
       business,
     });
 
-  } catch (error) {
-    console.error('Error updating business:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -162,8 +160,7 @@ export async function DELETE(
       message: 'Business deleted successfully',
     });
 
-  } catch (error) {
-    console.error('Error deleting business:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

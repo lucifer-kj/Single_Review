@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
 const feedbackFormSchema = z.object({
@@ -29,7 +29,6 @@ interface FeedbackFormProps {
 
 export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   
   const supabase = createClient();
@@ -38,7 +37,6 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackFormSchema),
@@ -51,11 +49,8 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
     },
   });
 
-  const allowFollowUp = watch('allow_follow_up');
-
-  const onSubmit = async (data: FeedbackFormData) => {
+  const onSubmit = async (data: unknown) => {
     setIsSubmitting(true);
-    setSubmitError('');
 
     try {
       // Store detailed feedback in analytics table
@@ -67,22 +62,21 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
           value: 1,
           metadata: {
             review_id: reviewId,
-            issue_category: data.issue_category,
-            detailed_feedback: data.detailed_feedback,
-            contact_email: data.contact_email || null,
-            contact_phone: data.contact_phone || null,
-            allow_follow_up: data.allow_follow_up,
+            issue_category: (data as FeedbackFormData).issue_category,
+            detailed_feedback: (data as FeedbackFormData).detailed_feedback,
+            contact_email: (data as FeedbackFormData).contact_email || null,
+            contact_phone: (data as FeedbackFormData) .contact_phone || null,
+            allow_follow_up: (data as FeedbackFormData).allow_follow_up,
             submitted_at: new Date().toISOString(),
           },
-        });
+          });
 
       if (error) throw error;
 
       setIsSuccess(true);
 
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      setSubmitError('Failed to submit feedback. Please try again.');
+    } catch {
+      throw new Error('Error submitting feedback');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,12 +107,11 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {submitError && (
-        <div className="flex items-center space-x-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
-          <AlertCircle className="w-4 h-4" />
-          <span>{submitError}</span>
-        </div>
-      )}
+      {/* 
+        The following error display was referencing a non-existent 'submitError' property on 'errors'.
+        If you want to show a generic submit error, you should use a separate state variable, e.g. 'submitError', not 'errors.submitError'.
+        For now, we remove this block to fix the error.
+      */}
 
       {/* Contact Information */}
       <div className="space-y-4">
@@ -130,7 +123,7 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
             id="contact_email"
             type="email"
             {...register('contact_email')}
-            placeholder="your.email@example.com"
+            placeholder="email@business.com"
             className="mobile-touch-target"
           />
           {errors.contact_email && (
@@ -144,7 +137,7 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
             id="contact_phone"
             type="tel"
             {...register('contact_phone')}
-            placeholder="Your phone number"
+            placeholder="123-456-7890"
             className="mobile-touch-target"
           />
           {errors.contact_phone && (

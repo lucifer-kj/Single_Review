@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -49,7 +48,7 @@ export function ReviewsTable() {
         } else {
           setError(data.error || 'Failed to fetch reviews');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch reviews');
       } finally {
         setLoading(false);

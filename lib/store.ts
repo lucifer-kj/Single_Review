@@ -3,10 +3,10 @@ import { persist } from 'zustand/middleware';
 import { Business, DashboardMetrics, ReviewTrend } from '@/lib/types';
 import type { User } from '@supabase/supabase-js';
 
-// User store
+// ------------------ User store ------------------
 interface UserState {
   user: User | null;
-  setUser: (user: User | null) => void;
+  setUser: (u: User | null) => void;
   clearUser: () => void;
 }
 
@@ -14,22 +14,20 @@ export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
       user: null,
-      setUser: (user) => set({ user }),
+      setUser: (u) => set({ user: u }),
       clearUser: () => set({ user: null }),
     }),
-    {
-      name: 'user-storage',
-    }
+    { name: 'user-storage' }
   )
 );
 
-// Business store
+// ------------------ Business store ------------------
 interface BusinessState {
   currentBusiness: Business | null;
   businesses: Business[];
-  setCurrentBusiness: (business: Business | null) => void;
-  setBusinesses: (businesses: Business[]) => void;
-  addBusiness: (business: Business) => void;
+  setCurrentBusiness: (b: Business | null) => void;
+  setBusinesses: (list: Business[]) => void;
+  addBusiness: (b: Business) => void;
   updateBusiness: (id: string, updates: Partial<Business>) => void;
   removeBusiness: (id: string) => void;
 }
@@ -39,16 +37,14 @@ export const useBusinessStore = create<BusinessState>()(
     (set) => ({
       currentBusiness: null,
       businesses: [],
-      setCurrentBusiness: (business) => set({ currentBusiness: business }),
-      setBusinesses: (businesses) => set({ businesses }),
-      addBusiness: (business) =>
-        set((state) => ({
-          businesses: [...state.businesses, business],
-        })),
+      setCurrentBusiness: (b) => set({ currentBusiness: b }),
+      setBusinesses: (list) => set({ businesses: list }),
+      addBusiness: (b) =>
+        set((state) => ({ businesses: [...state.businesses, b] })),
       updateBusiness: (id, updates) =>
         set((state) => ({
-          businesses: state.businesses.map((business) =>
-            business.id === id ? { ...business, ...updates } : business
+          businesses: state.businesses.map((biz) =>
+            biz.id === id ? { ...biz, ...updates } : biz
           ),
           currentBusiness:
             state.currentBusiness?.id === id
@@ -57,24 +53,24 @@ export const useBusinessStore = create<BusinessState>()(
         })),
       removeBusiness: (id) =>
         set((state) => ({
-          businesses: state.businesses.filter((business) => business.id !== id),
+          businesses: state.businesses.filter((biz) => biz.id !== id),
           currentBusiness:
             state.currentBusiness?.id === id ? null : state.currentBusiness,
         })),
     }),
-    {
-      name: 'business-storage',
-    }
+    { name: 'business-storage' }
   )
 );
 
-// UI store
+// ------------------ UI store ------------------
+type Theme = 'light' | 'dark' | 'system';
+
 interface UIState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  theme: Theme;
+  setTheme: (t: Theme) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -84,22 +80,20 @@ export const useUIStore = create<UIState>()(
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       theme: 'system',
-      setTheme: (theme) => set({ theme }),
+      setTheme: (t) => set({ theme: t }),
     }),
-    {
-      name: 'ui-storage',
-    }
+    { name: 'ui-storage' }
   )
 );
 
-// Analytics store
+// ------------------ Analytics store ------------------
 interface AnalyticsState {
   metrics: DashboardMetrics | null;
   trends: ReviewTrend[];
   loading: boolean;
-  setMetrics: (metrics: DashboardMetrics) => void;
-  setTrends: (trends: ReviewTrend[]) => void;
-  setLoading: (loading: boolean) => void;
+  setMetrics: (m: DashboardMetrics) => void;
+  setTrends: (t: ReviewTrend[]) => void;
+  setLoading: (l: boolean) => void;
   refreshAnalytics: () => Promise<void>;
 }
 
@@ -107,18 +101,16 @@ export const useAnalyticsStore = create<AnalyticsState>()((set) => ({
   metrics: null,
   trends: [],
   loading: false,
-  setMetrics: (metrics) => set({ metrics }),
-  setTrends: (trends) => set({ trends }),
-  setLoading: (loading) => set({ loading }),
+  setMetrics: (m) => set({ metrics: m }),
+  setTrends: (t) => set({ trends: t }),
+  setLoading: (l) => set({ loading: l }),
   refreshAnalytics: async () => {
     set({ loading: true });
     try {
-      // This will be implemented when we create the analytics API
+      // Placeholder for API calls:
       // const metrics = await fetchAnalytics();
       // const trends = await fetchTrends();
       // set({ metrics, trends });
-    } catch (error) {
-      console.error('Failed to refresh analytics:', error);
     } finally {
       set({ loading: false });
     }

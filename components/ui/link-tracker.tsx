@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 interface LinkTrackerProps {
   businessId: string;
-  linkType: 'qr_code' | 'direct_link' | 'social_share' | 'email' | 'sms';
+  linkType?: 'qr_code' | 'direct_link' | 'social_share' | 'email' | 'sms';
   source?: string;
 }
 
@@ -12,6 +12,30 @@ export function LinkTracker({ businessId, linkType, source }: LinkTrackerProps) 
   useEffect(() => {
     const trackLinkClick = async () => {
       try {
+        // Detect link type from URL parameters or referrer
+        let detectedLinkType = linkType || 'direct_link';
+        let detectedSource = source || 'unknown';
+
+        // Check URL parameters for tracking info
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSource = urlParams.get('source');
+        if (urlSource) {
+          detectedSource = urlSource;
+          if (urlSource === 'qr_code') {
+            detectedLinkType = 'qr_code';
+          }
+        }
+
+        // Detect source from referrer
+        if (document.referrer) {
+          const referrer = document.referrer.toLowerCase();
+          if (referrer.includes('facebook')) detectedSource = 'facebook';
+          else if (referrer.includes('twitter')) detectedSource = 'twitter';
+          else if (referrer.includes('linkedin')) detectedSource = 'linkedin';
+          else if (referrer.includes('whatsapp')) detectedSource = 'whatsapp';
+          else if (referrer.includes('mail') || referrer.includes('gmail')) detectedSource = 'email';
+        }
+
         await fetch('/api/analytics/link-tracking', {
           method: 'POST',
           headers: {
@@ -19,14 +43,18 @@ export function LinkTracker({ businessId, linkType, source }: LinkTrackerProps) 
           },
           body: JSON.stringify({
             business_id: businessId,
-            link_type: linkType,
-            source: source || 'unknown',
+            link_type: detectedLinkType,
+            source: detectedSource,
             user_agent: navigator.userAgent,
             referrer: document.referrer,
+            metadata: {
+              url_params: Object.fromEntries(urlParams.entries()),
+              timestamp: new Date().toISOString(),
+            }
           }),
         });
-      } catch (error) {
-        console.error('Failed to track link click:', error);
+      } catch {
+        console.log('Failed to track link click:');
       }
     };
 

@@ -89,8 +89,7 @@ export function ReviewForm({ businessId, business }: ReviewFormProps) {
         }
       }, 2000);
 
-    } catch (error) {
-      console.error('Error submitting review:', error);
+    } catch {
       setSubmitError('Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);

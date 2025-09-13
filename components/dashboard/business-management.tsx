@@ -16,7 +16,8 @@ import {
   QrCode,
   Loader2,
   Star,
-  MessageSquare
+  MessageSquare,
+  Share
 } from 'lucide-react';
 import Link from 'next/link';
 import { BusinessForm } from '@/components/forms/business-form';
@@ -69,14 +70,14 @@ export function BusinessManagement() {
       } else {
         setError(data.error || 'Failed to fetch businesses');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to fetch businesses');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateBusiness = async (data: any) => {
+  const handleCreateBusiness = async (data: unknown) => {
     try {
       const response = await fetch('/api/businesses', {
         method: 'POST',
@@ -92,13 +93,13 @@ export function BusinessManagement() {
       } else {
         throw new Error(result.error || 'Failed to create business');
       }
-    } catch (error) {
-      console.error('Error creating business:', error);
+    } catch {
+      console.error('Error creating business:');
       throw error;
     }
   };
 
-  const handleUpdateBusiness = async (data: any) => {
+  const handleUpdateBusiness = async (data: unknown) => {
     if (!editingBusiness) return;
     
     try {
@@ -116,8 +117,7 @@ export function BusinessManagement() {
       } else {
         throw new Error(result.error || 'Failed to update business');
       }
-    } catch (error) {
-      console.error('Error updating business:', error);
+    } catch {
       throw error;
     }
   };
@@ -139,8 +139,7 @@ export function BusinessManagement() {
       } else {
         throw new Error(result.error || 'Failed to delete business');
       }
-    } catch (error) {
-      console.error('Error deleting business:', error);
+    } catch {
       alert('Failed to delete business');
     }
   };
@@ -220,7 +219,7 @@ export function BusinessManagement() {
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300'
             }`}
           >
-            <Share2 className="w-4 h-4 mr-2 inline" />
+            <Share className="w-4 h-4 mr-2 inline" />
             Sharing & Analytics
           </button>
         </nav>
@@ -390,7 +389,7 @@ export function BusinessManagement() {
             <Card>
               <CardContent className="py-12">
                 <div className="text-center">
-                  <Share2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <Share className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">No Businesses to Share</h3>
                   <p className="text-muted-foreground mb-4">
                     Create a business first to start sharing review links

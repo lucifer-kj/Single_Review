@@ -21,13 +21,14 @@ export async function POST(request: NextRequest) {
       .insert({
         business_id,
         metric_type: 'link_click',
-        metric_value: 1,
+        value: 1,
         metadata: {
           link_type, // 'qr_code', 'direct_link', 'social_share', etc.
           source, // 'facebook', 'whatsapp', 'email', etc.
           user_agent: user_agent || null,
           referrer: referrer || null,
           timestamp: new Date().toISOString(),
+          ...body.metadata, // Include any additional metadata
         },
       });
 
@@ -40,8 +41,7 @@ export async function POST(request: NextRequest) {
       message: 'Link click tracked successfully',
     });
 
-  } catch (error) {
-    console.error('Error tracking link click:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
 
     // Group by source and type
     analytics?.forEach((item) => {
-      const metadata = item.metadata as any;
+      const metadata = item.metadata as unknown as { source: string; link_type: string };
       const source = metadata?.source || 'unknown';
       const type = metadata?.link_type || 'unknown';
 
@@ -123,8 +123,7 @@ export async function GET(request: NextRequest) {
       analytics: linkStats,
     });
 
-  } catch (error) {
-    console.error('Error fetching link analytics:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

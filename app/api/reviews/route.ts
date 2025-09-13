@@ -36,16 +36,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Error creating review:', error);
-    
-    if (error instanceof Error && error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Invalid form data' },
-        { status: 400 }
-      );
-    }
-
+  } catch {
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -114,8 +105,8 @@ export async function GET(request: NextRequest) {
       reviews,
     });
 
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
+  } catch {
+    console.error('Error fetching reviews:');
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

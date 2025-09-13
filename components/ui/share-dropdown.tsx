@@ -34,12 +34,38 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
     text: description,
   };
 
+  const trackShare = async (source: string, method: string) => {
+    try {
+      // Extract business ID from URL if possible
+      const urlParts = url.split('/');
+      const businessId = urlParts[urlParts.length - 1];
+      
+      await fetch('/api/analytics/link-tracking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          business_id: businessId,
+          link_type: 'social_share',
+          source: source,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer,
+          metadata: { method }
+        }),
+      });
+    } catch {
+      console.log('Failed to track share:');
+    }
+  };
+
   const shareOptions = [
     {
       name: 'WhatsApp',
       icon: MessageSquare,
       action: () => {
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`${title}: ${url}`)}`;
+        trackShare('whatsapp', 'dropdown');
         window.open(whatsappUrl, '_blank');
       },
     },
@@ -50,6 +76,7 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
         const subject = encodeURIComponent(title);
         const body = encodeURIComponent(`${description}\n\n${url}`);
         const mailtoUrl = `mailto:?subject=${subject}&body=${body}`;
+        trackShare('email', 'dropdown');
         window.location.href = mailtoUrl;
       },
     },
@@ -58,6 +85,7 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
       icon: Facebook,
       action: () => {
         const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        trackShare('facebook', 'dropdown');
         window.open(facebookUrl, '_blank', 'width=600,height=400');
       },
     },
@@ -66,6 +94,7 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
       icon: Twitter,
       action: () => {
         const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+        trackShare('twitter', 'dropdown');
         window.open(twitterUrl, '_blank', 'width=600,height=400');
       },
     },
@@ -74,6 +103,7 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
       icon: Linkedin,
       action: () => {
         const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+        trackShare('linkedin', 'dropdown');
         window.open(linkedinUrl, '_blank', 'width=600,height=400');
       },
     },
@@ -85,8 +115,9 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
           await navigator.clipboard.writeText(url);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
-        } catch (error) {
-          console.error('Failed to copy link:', error);
+          trackShare('copy', 'dropdown');
+        } catch {
+          console.log('Failed to copy link:');
         }
       },
     },
@@ -96,10 +127,9 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (error) {
-        if (error instanceof Error && error.name !== 'AbortError') {
-          console.error('Error sharing:', error);
-        }
+        trackShare('native', 'dropdown');
+      } catch {
+        console.log('Error sharing:');
       }
     }
   };
@@ -114,7 +144,7 @@ export function ShareDropdown({ url, title, description }: ShareDropdownProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {/* Native Share API (mobile) */}
-        {navigator.share && (
+        {'share' in navigator && typeof navigator.share === 'function' && (
           <>
             <DropdownMenuItem onClick={handleNativeShare}>
               <Share2 className="w-4 h-4 mr-2" />

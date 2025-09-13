@@ -50,7 +50,7 @@ export function DashboardOverview() {
         } else {
           setError(data.error || 'Failed to fetch analytics');
         }
-      } catch (err) {
+      } catch {
         setError('Failed to fetch analytics');
       } finally {
         setLoading(false);
