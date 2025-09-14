@@ -28,24 +28,7 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { SharePanel } from '@/components/ui/share-panel';
 import { SharingAnalytics } from '@/components/dashboard/sharing-analytics';
 
-interface Business {
-  id: string;
-  name: string;
-  description?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  google_business_url?: string;
-  logo_url?: string;
-  brand_color: string;
-  welcome_message: string;
-  thank_you_message: string;
-  created_at: string;
-  updated_at: string;
-  reviews_count?: number;
-  average_rating?: number;
-}
+import type { Business } from '@/lib/types';
 
 export function BusinessManagement() {
   const [showForm, setShowForm] = useState(false);
