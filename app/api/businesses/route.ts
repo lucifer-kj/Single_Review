@@ -2,65 +2,72 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth';
 import { createClient } from '@/lib/supabase-server';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await getUser();
-    
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const page = Number(searchParams.get('page') || '1');
+    const pageSize = Number(searchParams.get('limit') || '12');
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
 
     const supabase = await createClient();
 
-    // Get user's businesses with review counts
-    const { data: businesses, error } = await supabase
+    // Fetch businesses with total count (for pagination)
+    const { data: businesses, count, error: bizError } = await supabase
       .from('businesses')
-      .select(`
-        *,
-        reviews:reviews(count)
-      `)
+      .select('*', { count: 'exact' })
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
-    if (error) {
-      throw error;
+    if (bizError) throw bizError;
+
+    // Fetch all ratings once and aggregate in-memory to avoid N+1
+    const { data: ratings, error: ratingsError } = await supabase
+      .from('reviews')
+      .select('business_id, rating')
+      .in(
+        'business_id',
+        (businesses || []).map((b) => b.id)
+      );
+
+    if (ratingsError) throw ratingsError;
+
+    const statsMap = new Map<string, { count: number; sum: number }>();
+    for (const r of ratings || []) {
+      const key = r.business_id as string;
+      const entry = statsMap.get(key) || { count: 0, sum: 0 };
+      entry.count += 1;
+      entry.sum += (r.rating as number) || 0;
+      statsMap.set(key, entry);
     }
 
-    // Transform the data to include review counts and average ratings
-    const businessesWithStats = await Promise.all(
-      (businesses || []).map(async (business) => {
-        // Get review count and average rating
-        const { data: reviews } = await supabase
-          .from('reviews')
-          .select('rating')
-          .eq('business_id', business.id);
-
-        const reviewsCount = reviews?.length || 0;
-        const averageRating = reviewsCount > 0 
-          ? reviews!.reduce((sum, review) => sum + review.rating, 0) / reviewsCount
-          : 0;
-
-        return {
-          ...business,
-          reviews_count: reviewsCount,
-          average_rating: averageRating,
-        };
-      })
-    );
-
-    return NextResponse.json({
-      success: true,
-      businesses: businessesWithStats,
+    const businessesWithStats = (businesses || []).map((b) => {
+      const s = statsMap.get(b.id) || { count: 0, sum: 0 };
+      const avg = s.count > 0 ? s.sum / s.count : 0;
+      return { ...b, reviews_count: s.count, average_rating: avg };
     });
 
-  } catch {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    const res = NextResponse.json(
+      {
+        success: true,
+        businesses: businessesWithStats,
+        pagination: { page, pageSize, total: count || 0 },
+      },
+      {
+        status: 200,
+      }
     );
+    // Short-lived private cache to reduce load while ensuring user-specific data safety
+    res.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=60');
+    return res;
+  } catch (e) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

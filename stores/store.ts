@@ -27,18 +27,26 @@ export const useUserStore = create<UserState>()(
 interface BusinessState {
   currentBusiness: Business | null;
   businesses: Business[];
+  loading: boolean;
+  error: string;
   setCurrentBusiness: (business: Business | null) => void;
   setBusinesses: (businesses: Business[]) => void;
   addBusiness: (business: Business) => void;
   updateBusiness: (id: string, updates: Partial<Business>) => void;
   removeBusiness: (id: string) => void;
+  fetchBusinesses: () => Promise<void>;
+  createBusiness: (data: unknown) => Promise<void>;
+  updateBusinessRemote: (id: string, data: unknown) => Promise<void>;
+  deleteBusinessRemote: (id: string) => Promise<void>;
 }
 
 export const useBusinessStore = create<BusinessState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentBusiness: null,
       businesses: [],
+      loading: false,
+      error: '',
       setCurrentBusiness: (business) => set({ currentBusiness: business }),
       setBusinesses: (businesses) => set({ businesses }),
       addBusiness: (business) =>
@@ -61,6 +69,66 @@ export const useBusinessStore = create<BusinessState>()(
           currentBusiness:
             state.currentBusiness?.id === id ? null : state.currentBusiness,
         })),
+      fetchBusinesses: async () => {
+        set({ loading: true, error: '' });
+        try {
+          const response = await fetch('/api/businesses');
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Failed to fetch businesses');
+          }
+          set({ businesses: data.businesses });
+        } catch (e) {
+          console.error('Failed to fetch businesses', e);
+          set({ error: 'Failed to fetch businesses' });
+        } finally {
+          set({ loading: false });
+        }
+      },
+      createBusiness: async (data: unknown) => {
+        set({ error: '' });
+        const response = await fetch('/api/businesses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          console.error('Failed to create business', result.error);
+          set({ error: result.error || 'Failed to create business' });
+          return;
+        }
+        // Refresh list after creation
+        await get().fetchBusinesses();
+      },
+      updateBusinessRemote: async (id: string, data: unknown) => {
+        set({ error: '' });
+        const response = await fetch(`/api/businesses/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          console.error('Failed to update business', result.error);
+          set({ error: result.error || 'Failed to update business' });
+          return;
+        }
+        await get().fetchBusinesses();
+      },
+      deleteBusinessRemote: async (id: string) => {
+        set({ error: '' });
+        const response = await fetch(`/api/businesses/${id}`, {
+          method: 'DELETE',
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          console.error('Failed to delete business', result.error);
+          set({ error: result.error || 'Failed to delete business' });
+          return;
+        }
+        await get().fetchBusinesses();
+      },
     }),
     {
       name: 'business-storage',

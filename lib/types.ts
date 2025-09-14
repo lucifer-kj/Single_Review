@@ -12,11 +12,20 @@ export interface Business {
   id: string;
   name: string;
   description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
   logo_url?: string;
   google_business_url?: string;
+  brand_color?: string;
+  welcome_message?: string;
+  thank_you_message?: string;
   user_id: string;
   created_at: string;
   updated_at: string;
+  reviews_count?: number;
+  average_rating?: number;
 }
 
 // Review types

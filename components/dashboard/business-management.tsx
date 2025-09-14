@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useBusinessStore } from '@/stores/store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,101 +48,42 @@ interface Business {
 }
 
 export function BusinessManagement() {
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [activeTab, setActiveTab] = useState<'businesses' | 'sharing'>('businesses');
 
+  const {
+    businesses,
+    loading,
+    error,
+    fetchBusinesses,
+    createBusiness,
+    updateBusinessRemote,
+    deleteBusinessRemote,
+  } = useBusinessStore();
+
   useEffect(() => {
     fetchBusinesses();
-  }, []);
-
-  const fetchBusinesses = async () => {
-    try {
-      const response = await fetch('/api/businesses');
-      const data = await response.json();
-      
-      if (data.success) {
-        setBusinesses(data.businesses);
-      } else {
-        setError(data.error || 'Failed to fetch businesses');
-      }
-    } catch {
-      setError('Failed to fetch businesses');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchBusinesses]);
 
   const handleCreateBusiness = async (data: unknown) => {
-    try {
-      const response = await fetch('/api/businesses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        setShowForm(false);
-        fetchBusinesses();
-      } else {
-        throw new Error(result.error || 'Failed to create business');
-      }
-    } catch {
-      console.error('Error creating business:');
-      throw error;
-    }
+    await createBusiness(data);
+    setShowForm(false);
   };
 
   const handleUpdateBusiness = async (data: unknown) => {
     if (!editingBusiness) return;
-    
-    try {
-      const response = await fetch(`/api/businesses/${editingBusiness.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        setEditingBusiness(null);
-        fetchBusinesses();
-      } else {
-        throw new Error(result.error || 'Failed to update business');
-      }
-    } catch {
-      throw error;
-    }
+    await updateBusinessRemote(editingBusiness.id, data);
+    setEditingBusiness(null);
   };
 
   const handleDeleteBusiness = async (businessId: string) => {
     if (!confirm('Are you sure you want to delete this business? This action cannot be undone.')) {
       return;
     }
-
-    try {
-      const response = await fetch(`/api/businesses/${businessId}`, {
-        method: 'DELETE',
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        fetchBusinesses();
-      } else {
-        throw new Error(result.error || 'Failed to delete business');
-      }
-    } catch {
-      alert('Failed to delete business');
-    }
+    await deleteBusinessRemote(businessId);
   };
 
   const getReviewUrl = (businessId: string) => {
@@ -164,20 +106,8 @@ export function BusinessManagement() {
     );
   }
 
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <p className="text-destructive">{error}</p>
-            <Button onClick={fetchBusinesses} className="mt-4">
-              Retry
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Keep UI visible and show inline error state instead of full page replacement
+  const inlineError = error;
 
   return (
     <div className="space-y-6">
@@ -190,10 +120,15 @@ export function BusinessManagement() {
           </p>
         </div>
         {activeTab === 'businesses' && (
-          <Button onClick={() => setShowForm(true)} className="mobile-button">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Business
-          </Button>
+          <div className="flex items-center gap-3">
+            {inlineError && (
+              <span className="text-sm text-destructive">{inlineError}</span>
+            )}
+            <Button onClick={() => setShowForm(true)} className="mobile-button">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Business
+            </Button>
+          </div>
         )}
       </div>
 

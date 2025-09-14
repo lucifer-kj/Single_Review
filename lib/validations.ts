@@ -40,6 +40,23 @@ export const businessFormSchema = z.object({
     .optional(),
   logo_url: z.string().url('Please enter a valid URL').optional(),
   google_business_url: z.string().url('Please enter a valid URL').optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (phone) => {
+        if (!phone) return true;
+        const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+      },
+      'Please enter a valid phone number'
+    ),
+  email: z.string().email('Please enter a valid email').optional(),
+  address: z.string().optional(),
+  website: z.string().url('Please enter a valid URL').optional(),
+  brand_color: z.string().optional(),
+  welcome_message: z.string().optional(),
+  thank_you_message: z.string().optional(),
 });
 
 // User profile validation

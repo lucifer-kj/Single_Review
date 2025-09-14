@@ -29,6 +29,8 @@ export function BusinessForm({
   const [logoPreview, setLogoPreview] = useState<string | null>(business?.logo_url ?? null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -41,21 +43,31 @@ export function BusinessForm({
     defaultValues: business ?? {
       name: '',
       description: '',
-      google_business_url: '',
       logo_url: '',
+      google_business_url: '',
+      phone: '',
+      email: '',
+      address: '',
+      website: '',
+      brand_color: '#000000',
+      welcome_message: '',
+      thank_you_message: '',
     },
   });
 
   /** Handle file selection for logo */
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+    setUploadError(null);
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
+      setUploadError('Only image files are allowed.');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
+      setUploadError('File size must be less than 5MB.');
       return;
     }
 
@@ -86,6 +98,7 @@ export function BusinessForm({
 
     try {
       setUploading(true);
+      setUploadError(null);
       const supabase = createClient();
 
       const fileExt = logoFile.name.split('.').pop();
@@ -102,8 +115,9 @@ export function BusinessForm({
 
       const { data } = supabase.storage.from('business-logos').getPublicUrl(fileName);
       return data.publicUrl ?? null;
-    } catch {
-      console.error('Error uploading logo:');
+    } catch (e) {
+      console.error('Error uploading logo:', e);
+      setUploadError('Failed to upload logo. Please try again.');
       return null;
     } finally {
       setUploading(false);
@@ -113,16 +127,23 @@ export function BusinessForm({
   /** Final form submission */
   const onFormSubmit = async (formData: BusinessFormData) => {
     try {
+      setFormError(null);
       let logoUrl = formData.logo_url;
 
       if (logoFile) {
-        logoUrl = (await uploadLogoToStorage()) ?? '';
+        const uploaded = await uploadLogoToStorage();
+        if (!uploaded) {
+          setFormError('Logo upload failed. Please fix the error and try again.');
+          return;
+        }
+        logoUrl = uploaded;
         setValue('logo_url', logoUrl);
       }
 
       await onSubmit({ ...formData, logo_url: logoUrl });
-    } catch {
-      console.error('Error submitting form:');
+    } catch (e) {
+      console.error('Error submitting form:', e);
+      setFormError('Failed to save business. Please try again.');
     }
   };
 
@@ -184,6 +205,9 @@ export function BusinessForm({
             <p className="text-sm text-muted-foreground">
               Upload a square logo (recommended: 200x200px, max 5MB)
             </p>
+            {uploadError && (
+              <p className="text-sm text-destructive">{uploadError}</p>
+            )}
           </div>
 
           {/* Basic Information */}
@@ -216,13 +240,11 @@ export function BusinessForm({
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="phone"
-                    // @ts-expect-error phone is not in the type but is used in the form
                     {...register('phone')}
                     placeholder="123-456-7890"
                     className="pl-10"
                   />
                 </div>
-                {/* @ts-expect-error phone is not in the type but is used in the form */}
                 {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
               </div>
 
@@ -231,11 +253,9 @@ export function BusinessForm({
                 <Input
                   id="email"
                   type="email"
-                  // @ts-expect-error email is not in the type but is used in the form
                   {...register('email')}
                   placeholder="email@business.com"
                 />
-                {/* @ts-expect-error email is not in the type but is used in the form */}
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
             </div>
@@ -244,10 +264,8 @@ export function BusinessForm({
               <Label htmlFor="address">Address</Label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                {/* @ts-expect-error address is not in the type but is used in the form */}
                 <Input id="address" {...register('address')} placeholder="123 Main St, City, State" className="pl-10" />
               </div>
-              {/* @ts-expect-error address is not in the type but is used in the form */}
               {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
             </div>
           </div>
@@ -260,9 +278,9 @@ export function BusinessForm({
               <Label htmlFor="website">Website</Label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                {/* @ts-expect-error website is not in the type but is used in the form */}
                 <Input id="website" {...register('website')} placeholder="https://www.business.com" className="pl-10" />
               </div>
+              {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -292,11 +310,9 @@ export function BusinessForm({
                 <Input
                   id="brand_color"
                   type="color"
-                  // @ts-expect-error brand_color is not in the type but is used in the form
                   {...register('brand_color')}
                   className="w-16 h-10 p-1 border rounded cursor-pointer"
                 />
-                {/* @ts-expect-error brand_color is not in the type but is used in the form */}
                 {errors.brand_color && <p className="text-sm text-destructive">{errors.brand_color.message}</p>}
               </div>
               <p className="text-sm text-muted-foreground">
@@ -313,50 +329,33 @@ export function BusinessForm({
               <Label htmlFor="welcome_message">Welcome Message</Label>
               <Textarea
                 id="welcome_message"
-                // @ts-expect-error welcome_message is not in the type but is used in the form
                 {...register('welcome_message')}
                 placeholder="Welcome message shown to customers"
                 rows={2}
               />
-              {/* 
-                welcome_message is not in the type, so we need to safely check for its existence.
-                This avoids TypeScript errors and runtime issues.
-              */}
-              {'welcome_message' in errors && (
-                <p className="text-sm text-destructive">
-                  {
-                    // @ts-expect-error: welcome_message is not in the type but may exist at runtime
-                    errors.welcome_message?.message
-                  }
-                </p>
+              {errors.welcome_message && (
+                <p className="text-sm text-destructive">{errors.welcome_message.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="thank_you_message">Thank You Message</Label>
               <Textarea
                 id="thank_you_message"
-                // @ts-expect-error thank_you_message is not in the type but is used in the form
                 {...register('thank_you_message')}
                 placeholder="Message shown after review submission"
                 rows={2}
               />
-              {/* 
-                thank_you_message is not in the type, so we need to safely check for its existence.
-                This avoids TypeScript errors and runtime issues.
-              */}
-              {'thank_you_message' in errors && (
-                <p className="text-sm text-destructive">
-                  {
-                    // @ts-expect-error: thank_you_message is not in the type but may exist at runtime
-                    errors.thank_you_message?.message
-                  }
-                </p>
+              {errors.thank_you_message && (
+                <p className="text-sm text-destructive">{errors.thank_you_message.message}</p>
               )}
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+            {formError && (
+              <p className="text-sm text-destructive flex-1">{formError}</p>
+            )}
             <Button type="submit" disabled={loading || uploading} className="flex-1">
               {loading || uploading ? 'Saving...' : business ? 'Update Business' : 'Create Business'}
             </Button>
