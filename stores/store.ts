@@ -35,7 +35,7 @@ interface BusinessState {
   updateBusiness: (id: string, updates: Partial<Business>) => void;
   removeBusiness: (id: string) => void;
   fetchBusinesses: () => Promise<void>;
-  createBusiness: (data: unknown) => Promise<void>;
+  createBusiness: (data: unknown) => Promise<Business | null>;
   updateBusinessRemote: (id: string, data: unknown) => Promise<void>;
   deleteBusinessRemote: (id: string) => Promise<void>;
 }
@@ -96,10 +96,14 @@ export const useBusinessStore = create<BusinessState>()(
         if (!response.ok || !result.success) {
           console.error('Failed to create business', result.error);
           set({ error: result.error || 'Failed to create business' });
-          return;
+          return null;
         }
-        // Refresh list after creation
-        await get().fetchBusinesses();
+        const created: Business = result.business;
+        // Optimistically add, then refresh to include server-calculated fields
+        set((state) => ({ businesses: [...state.businesses, created] }));
+        // Refresh list after creation (to pick up stats)
+        get().fetchBusinesses();
+        return created;
       },
       updateBusinessRemote: async (id: string, data: unknown) => {
         set({ error: '' });

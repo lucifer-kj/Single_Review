@@ -52,8 +52,15 @@ export function BusinessManagement() {
   }, [fetchBusinesses]);
 
   const handleCreateBusiness = async (data: unknown) => {
-    await createBusiness(data);
+    const created = await createBusiness(data);
+    if (!created) {
+      // Let the form show an error via its own catch block
+      throw new Error('Failed to create business');
+    }
     setShowForm(false);
+    // Switch to sharing tab and select the new business so the link is visible
+    setActiveTab('sharing');
+    setSelectedBusiness(created);
   };
 
   const handleUpdateBusiness = async (data: unknown) => {
