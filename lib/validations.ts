@@ -38,8 +38,30 @@ export const businessFormSchema = z.object({
     .string()
     .max(500, 'Description must be less than 500 characters')
     .optional(),
-  logo_url: z.string().url('Please enter a valid URL').optional(),
-  google_business_url: z.string().url('Please enter a valid URL').optional(),
+  logo_url: z.string().optional().refine(
+    (url) => {
+      if (!url || url === '') return true;
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    'Please enter a valid URL'
+  ),
+  google_business_url: z.string().optional().refine(
+    (url) => {
+      if (!url || url === '') return true;
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    'Please enter a valid URL'
+  ),
   phone: z
     .string()
     .optional()
@@ -53,7 +75,18 @@ export const businessFormSchema = z.object({
     ),
   email: z.string().email('Please enter a valid email').optional(),
   address: z.string().optional(),
-  website: z.string().url('Please enter a valid URL').optional(),
+  website: z.string().optional().refine(
+    (url) => {
+      if (!url || url === '') return true;
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    'Please enter a valid URL'
+  ),
   brand_color: z.string().optional(),
   welcome_message: z.string().optional(),
   thank_you_message: z.string().optional(),
