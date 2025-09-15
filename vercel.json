@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "env": {
+    "LIGHTNINGCSS_IGNORE_NATIVE": "1"
+  },
+  "build": {
+    "env": {
+      "LIGHTNINGCSS_IGNORE_NATIVE": "1"
+    }
+  }
+}
+
+
