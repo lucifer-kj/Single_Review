@@ -159,7 +159,7 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
                 variant="outline"
                 size="sm"
                 className="flex-1"
-                onClick={() => window.open(`/dashboard/businesses`, '_blank')}
+                onClick={() => window.open(`/dashboard/settings`, '_blank')}
               >
                 Manage Business
               </Button>

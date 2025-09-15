@@ -88,7 +88,7 @@ export function ReviewsTable() {
           Start collecting reviews by sharing your review links with customers.
         </p>
         <Button asChild>
-          <a href="/businesses">Manage Businesses</a>
+          <a href="/dashboard/settings">Configure Settings</a>
         </Button>
       </div>
     );
