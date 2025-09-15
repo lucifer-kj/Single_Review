@@ -43,7 +43,12 @@ export default async function ReviewPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ReviewForm business={settings as any} />
+          <ReviewForm business={{
+            name: settings?.name ?? undefined,
+            brand_color: settings?.brand_color ?? undefined,
+            thank_you_message: settings?.thank_you_message ?? undefined,
+            google_business_url: settings?.google_business_url ?? undefined,
+          }} />
         </CardContent>
       </Card>
     </div>

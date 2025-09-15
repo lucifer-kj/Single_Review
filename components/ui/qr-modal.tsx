@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Copy, X, Smartphone } from 'lucide-react';
@@ -26,16 +26,14 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
   const [loading, setLoading] = useState(false);
   const [qrSize, setQrSize] = useState<'small' | 'medium' | 'large'>('medium');
 
-  const generateQRCode = async (size: 'small' | 'medium' | 'large' = 'medium') => {
+  const generateQRCode = useCallback(async (size: 'small' | 'medium' | 'large' = 'medium') => {
     if (!data) return;
-    
+
     setLoading(true);
     try {
-      // Extract business ID from URL
       const urlParts = data.url.split('/');
       const businessId = urlParts[urlParts.length - 1];
 
-      // Use the new API to generate QR code with tracking
       const response = await fetch('/api/qr-generate', {
         method: 'POST',
         headers: {
@@ -57,13 +55,12 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
       }
     } catch {
       console.log('Error generating QR code:');
-      // Fallback to client-side generation
       try {
         const dimensions = {
           small: 128,
           medium: 256,
           large: 512,
-        };
+        } as const;
 
         const qrCodeDataURL = await QRCode.toDataURL(data.url, {
           width: dimensions[size],
@@ -81,7 +78,7 @@ export function QRModal({ isOpen, onClose, data }: QRModalProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [data]);
 
   const downloadQRCode = () => {
     if (!qrCodeUrl) return;

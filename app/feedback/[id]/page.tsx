@@ -73,7 +73,7 @@ export default async function FeedbackPage(props: PageProps) {
             </div>
           )}
 
-          <FeedbackForm businessId={''} reviewId={reviewId} />
+          <FeedbackForm reviewId={reviewId} />
         </CardContent>
       </Card>
     </div>

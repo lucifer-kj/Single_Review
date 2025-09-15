@@ -137,7 +137,7 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
         </div>
         
         <div className="flex gap-2">
-          <Select value={dateRange} onValueChange={(value: any) => setDateRange(value)}>
+          <Select value={dateRange} onValueChange={(value: '7d' | '30d' | '90d' | '1y') => setDateRange(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -251,7 +251,8 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ rating, count }) => `${rating}★ (${count})`}
+                  nameKey="rating"
+                  label={(props: any) => `${props.name}★ (${props.value})`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"

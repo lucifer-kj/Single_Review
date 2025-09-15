@@ -12,16 +12,15 @@ import { StarRating } from '@/components/ui/star-rating';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 
-interface Business {
-  id: string;
-  name: string;
-  brand_color: string;
-  thank_you_message: string;
+interface ReviewBusinessInfo {
+  name?: string;
+  brand_color?: string;
+  thank_you_message?: string;
   google_business_url?: string;
 }
 
 interface ReviewFormProps {
-  business?: Business;
+  business?: ReviewBusinessInfo;
 }
 
 export function ReviewForm({ business }: ReviewFormProps) {

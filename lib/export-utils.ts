@@ -128,7 +128,21 @@ export function exportAnalyticsToCSV(analytics: AnalyticsExportData[], businessN
 /**
  * Export business data to CSV
  */
-export function exportBusinessesToCSV(businesses: any[]): void {
+export interface BusinessExportData {
+  id: string;
+  name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  google_business_url?: string;
+  created_at: string;
+  reviews_count?: number;
+  average_rating?: number;
+}
+
+export function exportBusinessesToCSV(businesses: BusinessExportData[]): void {
   const headers = [
     'ID',
     'Name',
@@ -165,7 +179,10 @@ export function exportBusinessesToCSV(businesses: any[]): void {
 /**
  * Generate PDF report (placeholder - would need jsPDF or similar library)
  */
-export async function generatePDFReport(data: any, type: 'reviews' | 'analytics' | 'businesses'): Promise<void> {
+export async function generatePDFReport(
+  data: unknown,
+  type: 'reviews' | 'analytics' | 'businesses'
+): Promise<void> {
   // This would require jsPDF or similar library
   // For now, we'll just log the data structure
   console.log(`Generating PDF report for ${type}:`, data);
