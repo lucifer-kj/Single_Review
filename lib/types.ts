@@ -1,105 +1,212 @@
-import { Database } from './database.types';
+// API Response Types
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  error?: string;
+  data?: T;
+  details?: unknown;
+}
 
-// Database types
-export type Tables<T extends keyof Database['public']['Tables']> =
-  Database['public']['Tables'][T]['Row'];
-
-export type Enums<T extends keyof Database['public']['Enums']> =
-  Database['public']['Enums'][T];
-
-// Business types
+// Business Types
 export interface Business {
   id: string;
+  user_id: string;
   name: string;
   description?: string;
   address?: string;
   phone?: string;
   email?: string;
   website?: string;
-  logo_url?: string;
   google_business_url?: string;
-  brand_color?: string;
-  welcome_message?: string;
-  thank_you_message?: string;
-  user_id: string;
+  logo_url?: string;
+  brand_color: string;
+  welcome_message: string;
+  thank_you_message: string;
   created_at: string;
   updated_at: string;
   reviews_count?: number;
   average_rating?: number;
 }
 
-// Review types
+export interface BusinessCreateData {
+  name: string;
+  description?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  google_business_url?: string;
+  logo_url?: string;
+  brand_color?: string;
+  welcome_message?: string;
+  thank_you_message?: string;
+}
+
+export type BusinessUpdateData = Partial<BusinessCreateData>;
+
+// Review Types
 export interface Review {
   id: string;
   business_id: string;
-  customer_name: string;
-  customer_phone?: string;
   rating: number;
   comment?: string;
-  is_public: boolean;
+  customer_name?: string;
+  customer_email?: string;
+  allow_follow_up: boolean;
   created_at: string;
   updated_at: string;
 }
 
-// Analytics types
-export interface Analytics {
+export interface ReviewCreateData {
+  rating: number;
+  comment?: string;
+  customer_name?: string;
+  customer_email?: string;
+  allow_follow_up?: boolean;
+}
+
+export type ReviewUpdateData = Partial<ReviewCreateData>;
+
+// Analytics Types
+export interface AnalyticsMetrics {
+  totalReviews: number;
+  averageRating: number;
+  ratingDistribution: RatingDistribution[];
+  dailyTrends: DailyTrend[];
+  period: number;
+}
+
+export interface RatingDistribution {
+  rating: number;
+  count: number;
+  percentage: number;
+}
+
+export interface DailyTrend {
+  date: string;
+  reviews: number;
+  averageRating: number;
+}
+
+export interface AnalyticsTrends {
+  data: TrendData[];
+  summary: {
+    totalReviews: number;
+    reviewGrowth: number;
+    period: number;
+    granularity: string;
+  };
+}
+
+export interface TrendData {
+  period: string;
+  reviews: number;
+  averageRating: number;
+  ratingDistribution: RatingDistribution[];
+}
+
+// Sharing Types
+export interface QRCodeData {
+  data: string;
+  url: string;
+  business_name: string;
+  format: 'png' | 'svg' | 'base64';
+  size: number;
+}
+
+export interface ShareData {
+  platform: 'whatsapp' | 'email' | 'sms' | 'facebook' | 'twitter' | 'linkedin';
+  url: string;
+  message: string;
+  business_name: string;
+}
+
+export interface LinkTracking {
   id: string;
   business_id: string;
-  metric_type: 'review_submitted' | 'google_redirect' | 'internal_feedback';
-  value: number;
+  link_type: 'direct' | 'qr_code' | 'social' | 'email';
+  link_url: string;
   metadata?: Record<string, unknown>;
   created_at: string;
 }
 
-// Form types
-export interface ReviewFormData {
-  customer_name: string;
-  customer_phone?: string;
+// Export Types
+export interface ExportData {
+  data: ExportReview[];
+  analytics?: ExportAnalytics;
+  metadata: {
+    format: 'csv' | 'json';
+    total_records: number;
+    exported_at: string;
+    user_id: string;
+  };
+}
+
+export interface ExportReview {
+  id: string;
+  business_name: string;
   rating: number;
   comment?: string;
+  customer_name?: string;
+  customer_email?: string;
+  allow_follow_up: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface BusinessFormData {
-  name: string;
-  description?: string;
-  logo_url?: string;
-  google_business_url?: string;
-}
-
-// API Response types
-  export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-// Dashboard types
-export interface DashboardMetrics {
+export interface ExportAnalytics {
   total_reviews: number;
-  positive_reviews: number;
-  internal_feedback: number;
-  conversion_rate: number;
+  average_rating: number;
+  rating_distribution: RatingDistribution[];
+  export_date: string;
+  period: {
+    start: string;
+    end: string;
+  };
+}
+
+// User Types
+export interface User {
+  id: string;
+  email: string;
+  full_name?: string;
+  created_at: string;
+}
+
+// Pagination Types
+export interface PaginationInfo {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: PaginationInfo;
+}
+
+// Dashboard Types
+export interface DashboardMetrics {
+  totalReviews: number;
+  averageRating: number;
+  totalBusinesses: number;
+  recentReviews: Review[];
 }
 
 export interface ReviewTrend {
   date: string;
-  count: number;
-  positive_count: number;
-  negative_count: number;
+  reviews: number;
+  averageRating: number;
 }
 
-// QR Code types
-export interface QRCodeData {
-  business_id: string;
-  business_name: string;
-  review_url: string;
+// Error Types
+export interface ValidationError {
+  field: string;
+  message: string;
 }
 
-// Share types
-export interface ShareData {
-  platform: 'whatsapp' | 'email' | 'sms' | 'facebook' | 'twitter';
-  business_name: string;
-  review_url: string;
-  message?: string;
+export interface ApiError {
+  success: false;
+  error: string;
+  details?: ValidationError[];
 }
