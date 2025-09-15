@@ -21,11 +21,10 @@ interface Business {
 }
 
 interface ReviewFormProps {
-  businessId: string;
   business?: Business;
 }
 
-export function ReviewForm({ businessId, business }: ReviewFormProps) {
+export function ReviewForm({ business }: ReviewFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -41,7 +40,6 @@ export function ReviewForm({ businessId, business }: ReviewFormProps) {
   } = useForm<ReviewFormData>({
     resolver: zodResolver(reviewFormSchema),
     defaultValues: {
-      business_id: businessId,
       customer_name: '',
       customer_phone: '',
       rating: 0,
@@ -60,7 +58,6 @@ export function ReviewForm({ businessId, business }: ReviewFormProps) {
       const { data: review, error } = await supabase
         .from('reviews')
         .insert({
-          business_id: businessId,
           customer_name: data.customer_name,
           customer_phone: data.customer_phone || null,
           rating: data.rating,
@@ -85,7 +82,7 @@ export function ReviewForm({ businessId, business }: ReviewFormProps) {
           }
         } else {
           // Low rating - redirect to internal feedback page
-          window.location.href = `/feedback/${businessId}?reviewId=${review.id}`;
+          window.location.href = `/feedback/global?reviewId=${review.id}`;
         }
       }, 2000);
 

@@ -14,35 +14,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('business_id');
     const period = searchParams.get('period') || '30'; // days
 
     const supabase = await createClient();
 
-    // Get user's businesses
-    const { data: businesses } = await supabase
-      .from('businesses')
-      .select('id, name')
-      .eq('user_id', user.id);
-
-    if (!businesses || businesses.length === 0) {
-      return NextResponse.json({
-        success: true,
-        metrics: {
-          total_reviews: 0,
-          positive_reviews: 0,
-          internal_feedback: 0,
-          conversion_rate: 0,
-        },
-        trends: [],
-        rating_distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-        businesses: [],
-      });
-    }
-
-    const businessIds = businessId 
-      ? [businessId] 
-      : businesses.map(b => b.id);
+    // Single-business: no scoping by business
 
     // Calculate date range
     const endDate = new Date();
@@ -53,7 +29,6 @@ export async function GET(request: NextRequest) {
     const { data: reviews } = await supabase
       .from('reviews')
       .select('*')
-      .in('business_id', businessIds)
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString())
       .order('created_at', { ascending: false });
@@ -62,7 +37,6 @@ export async function GET(request: NextRequest) {
     const { data: analytics } = await supabase
       .from('analytics')
       .select('*')
-      .in('business_id', businessIds)
       .gte('created_at', startDate.toISOString())
       .lte('created_at', endDate.toISOString());
 
@@ -111,7 +85,7 @@ export async function GET(request: NextRequest) {
       },
       trends,
       rating_distribution: ratingDistribution,
-      businesses: businesses,
+      businesses: [],
     });
 
   } catch {

@@ -4,10 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Building2 } from 'lucide-react';
 
-export default async function ReviewPage() {
+export default async function PublicReviewPage() {
   const supabase = await createClient();
 
-  // Fetch global app settings
   const { data: settings } = await supabase
     .from('app_settings')
     .select('*')
@@ -62,3 +61,4 @@ export async function generateMetadata() {
     description: settings?.description || 'Share your experience with us',
   };
 }
+

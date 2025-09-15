@@ -3,12 +3,11 @@
 import { useEffect } from 'react';
 
 interface LinkTrackerProps {
-  businessId: string;
   linkType?: 'qr_code' | 'direct_link' | 'social_share' | 'email' | 'sms';
   source?: string;
 }
 
-export function LinkTracker({ businessId, linkType, source }: LinkTrackerProps) {
+export function LinkTracker({ linkType, source }: LinkTrackerProps) {
   useEffect(() => {
     const trackLinkClick = async () => {
       try {
@@ -42,7 +41,6 @@ export function LinkTracker({ businessId, linkType, source }: LinkTrackerProps) 
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            business_id: businessId,
             link_type: detectedLinkType,
             source: detectedSource,
             user_agent: navigator.userAgent,
@@ -59,7 +57,7 @@ export function LinkTracker({ businessId, linkType, source }: LinkTrackerProps) 
     };
 
     trackLinkClick();
-  }, [businessId, linkType, source]);
+  }, [linkType, source]);
 
   return null; // This component doesn't render anything
 }

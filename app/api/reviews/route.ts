@@ -13,7 +13,6 @@ export async function POST(request: NextRequest) {
     const { data: review, error } = await supabase
       .from('reviews')
       .insert({
-        business_id: validatedData.business_id,
         customer_name: validatedData.customer_name,
         customer_phone: validatedData.customer_phone || null,
         rating: validatedData.rating,

@@ -23,11 +23,10 @@ const feedbackFormSchema = z.object({
 type FeedbackFormData = z.infer<typeof feedbackFormSchema>;
 
 interface FeedbackFormProps {
-  businessId: string;
   reviewId?: string;
 }
 
-export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
+export function FeedbackForm({ reviewId }: FeedbackFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
@@ -57,7 +56,6 @@ export function FeedbackForm({ businessId, reviewId }: FeedbackFormProps) {
       const { error } = await supabase
         .from('analytics')
         .insert({
-          business_id: businessId,
           metric_type: 'internal_feedback',
           value: 1,
           metadata: {

@@ -4,31 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { MessageSquare, Shield } from 'lucide-react';
 
 type PageProps = {
-  params: Promise<{ id: string }>;
   searchParams: Promise<{ reviewId?: string }>;
 };
 
-export default async function FeedbackPage(props: PageProps) {
+export default async function GlobalFeedbackPage(props: PageProps) {
   const { reviewId } = await props.searchParams;
-  
   const supabase = await createClient();
-  
-  // Fetch settings
+
   const { data: settings } = await supabase
     .from('app_settings')
-    .select('name, description')
+    .select('name')
     .single();
-
-  // Fetch review data if reviewId is provided
-  let review = null;
-  if (reviewId) {
-    const { data: reviewData } = await supabase
-      .from('reviews')
-      .select('customer_name, rating, comment')
-      .eq('id', reviewId)
-      .single();
-    review = reviewData;
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -59,21 +45,7 @@ export default async function FeedbackPage(props: PageProps) {
             </div>
           </div>
 
-          {/* Review Summary */}
-          {review && (
-            <div className="bg-muted rounded-lg p-4">
-              <h4 className="font-medium mb-2">Your Review Summary</h4>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p><strong>Name:</strong> {review.customer_name}</p>
-                <p><strong>Rating:</strong> {review.rating}/5 stars</p>
-                {review.comment && (
-                  <p><strong>Comment:</strong> {review.comment}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          <FeedbackForm businessId={''} reviewId={reviewId} />
+          <FeedbackForm reviewId={reviewId} />
         </CardContent>
       </Card>
     </div>
@@ -92,3 +64,4 @@ export async function generateMetadata() {
     description: 'Help us improve by sharing your detailed feedback',
   };
 }
+

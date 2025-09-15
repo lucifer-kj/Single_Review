@@ -122,7 +122,6 @@ export interface ShareData {
 
 export interface LinkTracking {
   id: string;
-  business_id: string;
   link_type: 'direct' | 'qr_code' | 'social' | 'email';
   link_url: string;
   metadata?: Record<string, unknown>;

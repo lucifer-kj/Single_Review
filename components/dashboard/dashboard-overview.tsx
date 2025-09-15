@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { ReviewTrendsChart } from '@/components/charts/review-trends-chart';
 import { RatingDistributionChart } from '@/components/charts/rating-distribution-chart';
 import { NotificationSystem } from '@/components/notifications/notification-system';
-import { BusinessSwitcher } from '@/components/business/business-switcher';
 import { ExportPanel } from '@/components/export/export-panel';
 import { AutoRefreshAnalytics } from '@/components/analytics/auto-refresh-analytics';
 
@@ -135,8 +134,7 @@ export function DashboardOverview() {
         <NotificationSystem />
       </div>
 
-      {/* Business Switcher */}
-      <BusinessSwitcher />
+      {/* Single business mode: no switcher */}
 
       {/* Quick Actions */}
       <Card>
@@ -149,16 +147,12 @@ export function DashboardOverview() {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Button asChild>
-              <Link href="/businesses/new">
+              <Link href="/review">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Business
+                Open Public Review Page
               </Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/businesses">
-                Manage Businesses
-              </Link>
-            </Button>
+            {/* Single business: no businesses management */}
             <Button variant="outline" asChild>
               <Link href="/reviews">
                 View Reviews
@@ -251,7 +245,7 @@ export function DashboardOverview() {
         <CardHeader>
           <CardTitle>Getting Started</CardTitle>
           <CardDescription>
-            Set up your first business to start collecting reviews
+            Configure your settings and start collecting reviews
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -261,7 +255,7 @@ export function DashboardOverview() {
                 1
               </div>
               <div>
-                <h4 className="font-medium">Create Your Business Profile</h4>
+                <h4 className="font-medium">Configure Settings</h4>
                 <p className="text-sm text-muted-foreground">
                   Add your business details, logo, and Google Business Profile URL
                 </p>

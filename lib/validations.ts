@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 // Review form validation
 export const reviewFormSchema = z.object({
-  business_id: z.string().uuid('Invalid business ID'),
   customer_name: z
     .string()
     .min(1, 'Customer name is required')
@@ -114,7 +113,6 @@ export const userProfileSchema = z.object({
 
 // Analytics filter validation
 export const analyticsFilterSchema = z.object({
-  business_id: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   metric_type: z

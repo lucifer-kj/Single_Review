@@ -14,7 +14,6 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('business_id');
     const period = searchParams.get('period') || '90'; // days
     const granularity = searchParams.get('granularity') || 'week'; // day, week, month
     const supabase = await createClient();
@@ -24,14 +23,8 @@ export async function GET(request: NextRequest) {
       .from('reviews')
       .select(`
         rating,
-        created_at,
-        businesses!inner(user_id)
-      `)
-      .eq('businesses.user_id', user.id);
-
-    if (businessId) {
-      query = query.eq('business_id', businessId);
-    }
+        created_at
+      `);
 
     // Add date filter
     const startDate = new Date();

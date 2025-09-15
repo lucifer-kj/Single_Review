@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase-server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { business_id, link_type, source, user_agent, referrer } = body;
+    const { link_type, source, user_agent, referrer } = body;
 
-    if (!business_id || !link_type) {
+    if (!link_type) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -19,8 +19,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase
       .from('analytics')
       .insert({
-        business_id,
-        metric_type: 'link_click',
+        metric_type: 'review_submitted',
         value: 1,
         metadata: {
           link_type, // 'qr_code', 'direct_link', 'social_share', etc.
