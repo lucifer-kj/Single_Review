@@ -178,25 +178,25 @@
   - [ ] Fast loading performance
   - [ ] Native app-like experience
 
-### 8. Advanced Features [ ]
+### 8. Advanced Features [X]
 
-- [ ] Real-time Updates:
-  - [ ] Supabase real-time subscriptions
-  - [ ] Live dashboard notifications
-  - [ ] Auto-refresh analytics
-- [ ] Export and Reporting:
-  - [ ] CSV export functionality
-  - [ ] PDF reports generation
-  - [ ] Custom date range selection
-  - [ ] Scheduled report emails
-- [ ] Email Notifications:
-  - [ ] New review alerts
-  - [ ] Weekly summary reports
-  - [ ] Low rating notifications
-- [ ] Multi-business Support:
-  - [ ] Business switching interface
-  - [ ] Consolidated analytics
-  - [ ] Role-based permissions
+- [X] Real-time Updates:
+  - [X] Supabase real-time subscriptions
+  - [X] Live dashboard notifications
+  - [X] Auto-refresh analytics
+- [X] Export and Reporting:
+  - [X] CSV export functionality
+  - [X] PDF reports generation
+  - [X] Custom date range selection
+  - [X] Scheduled report emails
+- [X] Email Notifications:
+  - [X] New review alerts
+  - [X] Weekly summary reports
+  - [X] Low rating notifications
+- [X] Multi-business Support:
+  - [X] Business switching interface
+  - [X] Consolidated analytics
+  - [X] Role-based permissions
 
 ### 9. API Routes [X]
 

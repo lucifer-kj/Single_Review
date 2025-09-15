@@ -7,6 +7,10 @@ import { Plus, Star, TrendingUp, Users, MessageSquare, Loader2 } from 'lucide-re
 import Link from 'next/link';
 import { ReviewTrendsChart } from '@/components/charts/review-trends-chart';
 import { RatingDistributionChart } from '@/components/charts/rating-distribution-chart';
+import { NotificationSystem } from '@/components/notifications/notification-system';
+import { BusinessSwitcher } from '@/components/business/business-switcher';
+import { ExportPanel } from '@/components/export/export-panel';
+import { AutoRefreshAnalytics } from '@/components/analytics/auto-refresh-analytics';
 
 interface DashboardMetrics {
   total_reviews: number;
@@ -120,6 +124,20 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Notifications */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome to your review management dashboard
+          </p>
+        </div>
+        <NotificationSystem />
+      </div>
+
+      {/* Business Switcher */}
+      <BusinessSwitcher />
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -195,6 +213,37 @@ export function DashboardOverview() {
             <RatingDistributionChart data={ratingDistribution} />
           </CardContent>
         </Card>
+      </div>
+
+      {/* Export and Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AutoRefreshAnalytics
+          onRefresh={() => {
+            // Refresh analytics data
+            fetchMetrics();
+            fetchTrends();
+            fetchRatingDistribution();
+          }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Live Analytics</CardTitle>
+              <CardDescription>
+                Real-time analytics with auto-refresh
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Analytics will appear here with real-time updates
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </AutoRefreshAnalytics>
+
+        <ExportPanel reviews={[]} analytics={[]} />
       </div>
 
       {/* Getting Started */}
