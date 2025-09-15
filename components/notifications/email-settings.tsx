@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Mail, Bell, BellOff, Send, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -117,9 +116,12 @@ export function EmailSettings() {
                   Get notified when customers leave new reviews
                 </p>
               </div>
-              <Switch
+              <input
+                type="checkbox"
                 checked={settings.newReviewNotifications}
-                onCheckedChange={(checked) => updateSetting('newReviewNotifications', checked)}
+                onChange={(e) => updateSetting('newReviewNotifications', e.target.checked)}
+                className="h-5 w-5"
+                aria-label="Toggle new review notifications"
               />
             </div>
 
@@ -133,9 +135,12 @@ export function EmailSettings() {
                   Get immediate alerts for reviews with 2 stars or less
                 </p>
               </div>
-              <Switch
+              <input
+                type="checkbox"
                 checked={settings.lowRatingAlerts}
-                onCheckedChange={(checked) => updateSetting('lowRatingAlerts', checked)}
+                onChange={(e) => updateSetting('lowRatingAlerts', e.target.checked)}
+                className="h-5 w-5"
+                aria-label="Toggle low rating alerts"
               />
             </div>
 
@@ -149,9 +154,12 @@ export function EmailSettings() {
                   Receive weekly summaries of your review performance
                 </p>
               </div>
-              <Switch
+              <input
+                type="checkbox"
                 checked={settings.weeklyReports}
-                onCheckedChange={(checked) => updateSetting('weeklyReports', checked)}
+                onChange={(e) => updateSetting('weeklyReports', e.target.checked)}
+                className="h-5 w-5"
+                aria-label="Toggle weekly summary reports"
               />
             </div>
           </div>

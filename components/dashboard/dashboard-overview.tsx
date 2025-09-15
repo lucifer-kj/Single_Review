@@ -41,7 +41,7 @@ export function DashboardOverview() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchAllAnalytics = async () => {
       try {
         const response = await fetch('/api/analytics');
         const data = await response.json();
@@ -60,7 +60,7 @@ export function DashboardOverview() {
       }
     };
 
-    fetchAnalytics();
+    fetchAllAnalytics();
   }, []);
 
   if (loading) {
@@ -214,9 +214,19 @@ export function DashboardOverview() {
         <AutoRefreshAnalytics
           onRefresh={() => {
             // Refresh analytics data
-            fetchMetrics();
-            fetchTrends();
-            fetchRatingDistribution();
+            (async () => {
+              try {
+                const response = await fetch('/api/analytics');
+                const data = await response.json();
+                if (data.success) {
+                  setMetrics(data.metrics);
+                  setTrends(data.trends);
+                  setRatingDistribution(data.rating_distribution);
+                }
+              } catch {
+                // ignore refresh error; UI already shows last data
+              }
+            })();
           }}
         >
           <Card>
