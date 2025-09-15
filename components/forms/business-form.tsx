@@ -233,6 +233,8 @@ export function BusinessForm({
               )}
             </div>
 
+            {/* Temporarily disabled until database migration */}
+            {/*
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
@@ -268,12 +270,15 @@ export function BusinessForm({
               </div>
               {errors.address && <p className="text-sm text-destructive">{errors.address.message}</p>}
             </div>
+            */}
           </div>
 
           {/* Online Presence */}
           <div className="space-y-4">
             <Label className="text-base font-semibold">Online Presence</Label>
 
+            {/* Temporarily disabled until database migration */}
+            {/*
             <div className="space-y-2">
               <Label htmlFor="website">Website</Label>
               <div className="relative">
@@ -282,6 +287,7 @@ export function BusinessForm({
               </div>
               {errors.website && <p className="text-sm text-destructive">{errors.website.message}</p>}
             </div>
+            */}
 
             <div className="space-y-2">
               <Label htmlFor="google_business_url">Google Business Profile URL</Label>
@@ -300,7 +306,8 @@ export function BusinessForm({
             </div>
           </div>
 
-          {/* Branding */}
+          {/* Temporarily disabled until database migration */}
+          {/*
           <div className="space-y-4">
             <Label className="text-base font-semibold">Branding</Label>
 
@@ -321,7 +328,6 @@ export function BusinessForm({
             </div>
           </div>
 
-          {/* Custom Messages */}
           <div className="space-y-4">
             <Label className="text-base font-semibold">Custom Messages</Label>
 
@@ -350,6 +356,7 @@ export function BusinessForm({
               )}
             </div>
           </div>
+          */}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
