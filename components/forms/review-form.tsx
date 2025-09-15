@@ -77,7 +77,10 @@ export function ReviewForm({ business }: ReviewFormProps) {
           if (business?.google_business_url) {
             window.location.href = business.google_business_url;
           } else {
-            window.location.href = `https://g.page/r/${business?.name?.replace(/\s+/g, '-').toLowerCase()}/review`;
+            // If no Google Business URL is configured, show error message
+            setSubmitError('Google Business Profile URL is not configured. Please contact the business owner.');
+            setIsSuccess(false);
+            return;
           }
         } else {
           // Low rating - redirect to internal feedback page

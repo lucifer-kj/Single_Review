@@ -10,6 +10,7 @@ import { RatingDistributionChart } from '@/components/charts/rating-distribution
 import { NotificationSystem } from '@/components/notifications/notification-system';
 import { ExportPanel } from '@/components/export/export-panel';
 import { AutoRefreshAnalytics } from '@/components/analytics/auto-refresh-analytics';
+import { ReviewLinkCard } from '@/components/dashboard/review-link-card';
 
 interface DashboardMetrics {
   total_reviews: number;
@@ -136,6 +137,9 @@ export function DashboardOverview() {
 
       {/* Single business mode: no switcher */}
 
+      {/* Review Link Card */}
+      <ReviewLinkCard />
+
       {/* Quick Actions */}
       <Card>
         <CardHeader>
@@ -147,7 +151,7 @@ export function DashboardOverview() {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <Button asChild>
-              <Link href="/review">
+              <Link href="/review/global">
                 <Plus className="mr-2 h-4 w-4" />
                 Open Public Review Page
               </Link>
