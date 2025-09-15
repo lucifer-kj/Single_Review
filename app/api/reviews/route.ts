@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
         customer_name: validatedData.customer_name,
         customer_phone: validatedData.customer_phone || null,
         rating: validatedData.rating,
-        comment: validatedData.comment || null,
         is_public: validatedData.rating >= 4,
       })
       .select()

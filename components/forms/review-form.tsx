@@ -42,7 +42,6 @@ export function ReviewForm({ business }: ReviewFormProps) {
       customer_name: '',
       customer_phone: '',
       rating: 0,
-      comment: '',
     },
   });
 
@@ -53,20 +52,20 @@ export function ReviewForm({ business }: ReviewFormProps) {
     setSubmitError('');
 
     try {
-      // Submit review to database
-      const { data: review, error } = await supabase
-        .from('reviews')
-        .insert({
-          customer_name: data.customer_name,
-          customer_phone: data.customer_phone || null,
-          rating: data.rating,
-          comment: data.comment || null,
-          is_public: data.rating >= 4,
-        })
-        .select()
-        .single();
+      // Submit review via API route
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-      if (error) throw error;
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to submit review');
+      }
 
       setIsSuccess(true);
 
@@ -84,11 +83,12 @@ export function ReviewForm({ business }: ReviewFormProps) {
           }
         } else {
           // Low rating - redirect to internal feedback page
-          window.location.href = `/feedback/global?reviewId=${review.id}`;
+          window.location.href = `/feedback/global?reviewId=${result.review.id}`;
         }
       }, 2000);
 
-    } catch {
+    } catch (error) {
+      console.error('Review submission error:', error);
       setSubmitError('Failed to submit review. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -170,20 +170,6 @@ export function ReviewForm({ business }: ReviewFormProps) {
         )}
       </div>
 
-      {/* Comment */}
-      <div className="space-y-2">
-        <Label htmlFor="comment">Tell us about your experience (Optional)</Label>
-        <Textarea
-          id="comment"
-          {...register('comment')}
-          placeholder="Share details about your experience..."
-          rows={4}
-          className="mobile-touch-target"
-        />
-        {errors.comment && (
-          <p className="text-sm text-destructive">{errors.comment.message}</p>
-        )}
-      </div>
 
       {/* Submit Button */}
       <Button
