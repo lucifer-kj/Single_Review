@@ -5,9 +5,28 @@ import { reviewFormSchema } from '@/lib/validations';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('Received review data:', body);
+    
     const validatedData = reviewFormSchema.parse(body);
+    console.log('Validated data:', validatedData);
 
     const supabase = await createClient();
+
+    // Test database connection first
+    const { data: testData, error: testError } = await supabase
+      .from('reviews')
+      .select('id')
+      .limit(1);
+
+    if (testError) {
+      console.error('Database connection test failed:', testError);
+      return NextResponse.json(
+        { error: `Database connection failed: ${testError.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log('Database connection successful');
 
     // Insert review
     const { data: review, error } = await supabase
@@ -22,8 +41,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      throw error;
+      console.error('Database insert error:', error);
+      return NextResponse.json(
+        { error: `Database insert error: ${error.message}` },
+        { status: 500 }
+      );
     }
+
+    console.log('Review created successfully:', review);
 
     return NextResponse.json({
       success: true,
@@ -34,9 +59,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-  } catch {
+  } catch (error) {
+    console.error('Review submission error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Validation error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
@@ -44,57 +70,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const businessId = searchParams.get('business_id');
-    const userId = searchParams.get('user_id');
-
-    if (!businessId && !userId) {
-      return NextResponse.json(
-        { error: 'business_id or user_id is required' },
-        { status: 400 }
-      );
-    }
-
     const supabase = await createClient();
 
-    let query = supabase
+    // Get all reviews (single business model)
+    const { data: reviews, error } = await supabase
       .from('reviews')
-      .select(`
-        *,
-        businesses (
-          id,
-          name,
-          logo_url
-        )
-      `);
-
-    if (businessId) {
-      query = query.eq('business_id', businessId);
-    }
-
-    if (userId) {
-      // First get business IDs owned by the user
-      const { data: userBusinesses } = await supabase
-        .from('businesses')
-        .select('id')
-        .eq('user_id', userId);
-      
-      if (userBusinesses && userBusinesses.length > 0) {
-        const businessIds = userBusinesses.map(b => b.id);
-        query = query.in('business_id', businessIds);
-      } else {
-        // Return empty array if user has no businesses
-        return NextResponse.json({
-          success: true,
-          reviews: [],
-        });
-      }
-    }
-
-    const { data: reviews, error } = await query
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('Database error:', error);
       throw error;
     }
 
@@ -103,8 +88,8 @@ export async function GET(request: NextRequest) {
       reviews,
     });
 
-  } catch {
-    console.error('Error fetching reviews:');
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
