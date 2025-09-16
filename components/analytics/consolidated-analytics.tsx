@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, TrendingDown, Star, MessageSquare, Eye, Users } from 'lucide-react';
+import { Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, Star, MessageSquare, Eye, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useBusinessStore } from '@/stores/store';
 
-interface ConsolidatedAnalyticsProps {
-  businessId?: string;
-}
+
+type ConsolidatedAnalyticsProps = object;
 
 interface AnalyticsData {
   totalReviews: number;
@@ -27,14 +24,14 @@ interface AnalyticsData {
   topPerformingBusinesses: Array<{ name: string; reviews: number; rating: number }>;
 }
 
-export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps) {
+export function ConsolidatedAnalytics(_: ConsolidatedAnalyticsProps) {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  const { businesses } = useBusinessStore();
+  const businesses: Array<{ id: string; name: string; reviews_count?: number; average_rating?: number; logo_url?: string }> = [];
 
   // Mock data - in real implementation, this would come from API
   useEffect(() => {
@@ -47,7 +44,7 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
       const mockData: AnalyticsData = {
         totalReviews: 1247,
         averageRating: 4.2,
-        totalBusinesses: businesses.length,
+        totalBusinesses: 1,
         recentReviews: 23,
         ratingDistribution: [
           { rating: 5, count: 456 },
@@ -64,11 +61,9 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
           { month: 'May', reviews: 134, rating: 4.2 },
           { month: 'Jun', reviews: 127, rating: 4.4 },
         ],
-        topPerformingBusinesses: businesses.slice(0, 5).map(business => ({
-          name: business.name,
-          reviews: business.reviews_count || 0,
-          rating: business.average_rating || 0,
-        })),
+        topPerformingBusinesses: [
+          { name: 'Your Business', reviews: 1247, rating: 4.2 },
+        ],
       };
       
       setAnalyticsData(mockData);
@@ -76,7 +71,7 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
     };
 
     fetchAnalytics();
-  }, [businesses, dateRange, businessId]);
+  }, [dateRange]);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -131,9 +126,7 @@ export function ConsolidatedAnalytics({ businessId }: ConsolidatedAnalyticsProps
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Analytics Overview</h2>
-          <p className="text-muted-foreground">
-            {businessId ? 'Business-specific analytics' : 'Consolidated analytics across all businesses'}
-          </p>
+          <p className="text-muted-foreground">Single-business analytics overview</p>
         </div>
         
         <div className="flex gap-2">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useBusinessStore } from '@/stores/store';
+// Single-business mode: this component is deprecated; keep placeholder UI
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,16 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { SharePanel } from '@/components/ui/share-panel';
 import { SharingAnalytics } from '@/components/dashboard/sharing-analytics';
 
-import type { Business } from '@/lib/types';
+interface Business {
+  id: string;
+  name: string;
+  logo_url?: string | null;
+  brand_color?: string | null;
+  average_rating?: number | null;
+  reviews_count?: number | null;
+  description?: string | null;
+  google_business_url?: string | null;
+}
 
 export function BusinessManagement() {
   const [showForm, setShowForm] = useState(false);
@@ -37,19 +46,21 @@ export function BusinessManagement() {
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [activeTab, setActiveTab] = useState<'businesses' | 'sharing'>('businesses');
 
-  const {
-    businesses,
-    loading,
-    error,
-    fetchBusinesses,
-    createBusiness,
-    updateBusinessRemote,
-    deleteBusinessRemote,
-  } = useBusinessStore();
+  const businesses: Business[] = [];
+  const loading = false;
+  const error = '';
+  // Define inside effect to avoid changing dependency
+  const fetchBusinesses = (): void => void 0;
+  const createBusiness = async (data: unknown): Promise<Business | null> => (null as any);
+  const updateBusinessRemote = async (id: string, data: unknown): Promise<void> => void 0;
+  const deleteBusinessRemote = async (id: string): Promise<void> => void 0;
 
   useEffect(() => {
-    fetchBusinesses();
-  }, [fetchBusinesses]);
+    const run = () => {
+      fetchBusinesses();
+    };
+    run();
+  }, []);
 
   const handleCreateBusiness = async (data: unknown) => {
     const created = await createBusiness(data);
@@ -84,7 +95,7 @@ export function BusinessManagement() {
     return {
       url: getReviewUrl(business.id),
       businessName: business.name,
-      logoUrl: business.logo_url,
+      logoUrl: business.logo_url ?? undefined,
     };
   };
 
@@ -204,7 +215,10 @@ export function BusinessManagement() {
                   </div>
                   <Badge 
                     variant="secondary" 
-                    style={{ backgroundColor: business.brand_color + '20', color: business.brand_color }}
+                    style={{ 
+                      backgroundColor: `${(business.brand_color ?? '#000000')}20`, 
+                      color: business.brand_color ?? '#000000' 
+                    }}
                   >
                     Active
                   </Badge>
@@ -402,7 +416,13 @@ export function BusinessManagement() {
             </DialogTitle>
           </DialogHeader>
           <BusinessForm
-            business={editingBusiness || undefined}
+            business={editingBusiness ? {
+              ...editingBusiness,
+              description: editingBusiness.description ?? undefined,
+              logo_url: editingBusiness.logo_url ?? undefined,
+              google_business_url: editingBusiness.google_business_url ?? undefined,
+              brand_color: editingBusiness.brand_color ?? undefined,
+            } : undefined}
             onSubmit={editingBusiness ? handleUpdateBusiness : handleCreateBusiness}
             onCancel={() => {
               setShowForm(false);

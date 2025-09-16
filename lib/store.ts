@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Business, DashboardMetrics, ReviewTrend } from '@/lib/types';
+import { DashboardMetrics, ReviewTrend } from '@/lib/types';
 import type { User } from '@supabase/supabase-js';
 
 // ------------------ User store ------------------
@@ -21,46 +21,7 @@ export const useUserStore = create<UserState>()(
   )
 );
 
-// ------------------ Business store ------------------
-interface BusinessState {
-  currentBusiness: Business | null;
-  businesses: Business[];
-  setCurrentBusiness: (b: Business | null) => void;
-  setBusinesses: (list: Business[]) => void;
-  addBusiness: (b: Business) => void;
-  updateBusiness: (id: string, updates: Partial<Business>) => void;
-  removeBusiness: (id: string) => void;
-}
-
-export const useBusinessStore = create<BusinessState>()(
-  persist(
-    (set) => ({
-      currentBusiness: null,
-      businesses: [],
-      setCurrentBusiness: (b) => set({ currentBusiness: b }),
-      setBusinesses: (list) => set({ businesses: list }),
-      addBusiness: (b) =>
-        set((state) => ({ businesses: [...state.businesses, b] })),
-      updateBusiness: (id, updates) =>
-        set((state) => ({
-          businesses: state.businesses.map((biz) =>
-            biz.id === id ? { ...biz, ...updates } : biz
-          ),
-          currentBusiness:
-            state.currentBusiness?.id === id
-              ? { ...state.currentBusiness, ...updates }
-              : state.currentBusiness,
-        })),
-      removeBusiness: (id) =>
-        set((state) => ({
-          businesses: state.businesses.filter((biz) => biz.id !== id),
-          currentBusiness:
-            state.currentBusiness?.id === id ? null : state.currentBusiness,
-        })),
-    }),
-    { name: 'business-storage' }
-  )
-);
+// Business store removed for single-business mode
 
 // ------------------ UI store ------------------
 type Theme = 'light' | 'dark' | 'system';

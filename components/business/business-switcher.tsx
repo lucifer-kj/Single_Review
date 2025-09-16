@@ -7,45 +7,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useBusinessStore } from '@/stores/store';
-import type { Business } from '@/lib/types';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
-interface BusinessSwitcherProps {
-  onBusinessChange?: (business: Business) => void;
-  showStats?: boolean;
-  className?: string;
-}
+interface BusinessSwitcherProps { className?: string }
 
-export function BusinessSwitcher({ onBusinessChange, showStats = true, className }: BusinessSwitcherProps) {
-  const { businesses, currentBusiness, setCurrentBusiness } = useBusinessStore();
+export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
+  const { settings } = useAppSettings();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleBusinessSelect = (businessId: string) => {
-    const business = businesses.find(b => b.id === businessId);
-    if (business) {
-      setCurrentBusiness(business);
-      onBusinessChange?.(business);
-    }
-  };
+  const handleBusinessSelect = (id?: string) => {};
 
-  const getQuickStats = (business: Business) => {
+  const getQuickStats = () => {
     return {
-      reviews: business.reviews_count || 0,
-      rating: business.average_rating || 0,
+      reviews: 0,
+      rating: 0,
       recentReviews: 0, // This would come from analytics
     };
   };
 
-  if (businesses.length === 0) {
+  if (!settings) {
     return (
       <Card className={className}>
         <CardContent className="py-8">
           <div className="text-center">
             <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Businesses</h3>
-            <p className="text-muted-foreground">
-              Create your first business to get started
-            </p>
+            <h3 className="text-lg font-medium mb-2">Business</h3>
+            <p className="text-muted-foreground">Loading settings...</p>
           </div>
         </CardContent>
       </Card>
@@ -57,68 +44,61 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <Building2 className="w-5 h-5" />
-          Business Switcher
+          Business
         </CardTitle>
         <CardDescription>
-          Switch between your businesses to manage reviews and analytics
+          Single business mode
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Business Selector */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Select Business</label>
-          <Select
-            value={currentBusiness?.id || ''}
-            onValueChange={handleBusinessSelect}
-          >
+          <Select value={settings?.name || ''} onValueChange={handleBusinessSelect}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Choose a business" />
+              <SelectValue placeholder="Your business" />
             </SelectTrigger>
             <SelectContent>
-              {businesses.map((business) => (
-                <SelectItem key={business.id} value={business.id}>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-6 h-6">
-                      <AvatarImage src={business.logo_url || undefined} />
-                      <AvatarFallback className="text-xs">
-                        {business.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>{business.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
+              <SelectItem value={settings?.name || 'Business'}>
+                <div className="flex items-center gap-3">
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={settings?.logo_url || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {settings?.name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{settings?.name}</span>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Current Business Info */}
-        {currentBusiness && (
+        {settings && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={currentBusiness.logo_url || undefined} />
+                <AvatarImage src={settings.logo_url || undefined} />
                 <AvatarFallback>
-                  {currentBusiness.name.charAt(0).toUpperCase()}
+                  {settings.name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h3 className="font-medium">{currentBusiness.name}</h3>
+                <h3 className="font-medium">{settings.name}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {currentBusiness.description || 'No description'}
+                  {settings.description || 'No description'}
                 </p>
               </div>
             </div>
 
             {/* Quick Stats */}
-            {showStats && (
+            {true && (
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <MessageSquare className="w-4 h-4 text-blue-600" />
-                    <span className="text-lg font-bold text-blue-700">
-                      {getQuickStats(currentBusiness).reviews}
-                    </span>
+                    <span className="text-lg font-bold text-blue-700">{getQuickStats().reviews}</span>
                   </div>
                   <p className="text-xs text-blue-600">Total Reviews</p>
                 </div>
@@ -126,9 +106,7 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
                 <div className="text-center p-3 bg-yellow-50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <Star className="w-4 h-4 text-yellow-600" />
-                    <span className="text-lg font-bold text-yellow-700">
-                      {getQuickStats(currentBusiness).rating.toFixed(1)}
-                    </span>
+                    <span className="text-lg font-bold text-yellow-700">{getQuickStats().rating.toFixed(1)}</span>
                   </div>
                   <p className="text-xs text-yellow-600">Avg Rating</p>
                 </div>
@@ -136,9 +114,7 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
                 <div className="text-center p-3 bg-green-50 rounded-lg">
                   <div className="flex items-center justify-center gap-1 mb-1">
                     <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-lg font-bold text-green-700">
-                      {getQuickStats(currentBusiness).recentReviews}
-                    </span>
+                    <span className="text-lg font-bold text-green-700">{getQuickStats().recentReviews}</span>
                   </div>
                   <p className="text-xs text-green-600">This Week</p>
                 </div>
@@ -147,12 +123,7 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
 
             {/* Business Actions */}
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => window.open(`/review/${currentBusiness.id}`, '_blank')}
-              >
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => window.open(`/review/global`, '_blank')}>
                 View Public Page
               </Button>
               <Button
@@ -168,13 +139,13 @@ export function BusinessSwitcher({ onBusinessChange, showStats = true, className
         )}
 
         {/* All Businesses List */}
-        {businesses.length > 1 && (
+        {false && (
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-gray-700">All Your Businesses</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {businesses.map((business) => {
-                const stats = getQuickStats(business);
-                const isSelected = currentBusiness?.id === business.id;
+              {( [] as any[] ).map((business) => {
+                const stats = getQuickStats();
+                const isSelected = false;
                 
                 return (
                   <div

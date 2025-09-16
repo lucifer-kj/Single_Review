@@ -20,9 +20,7 @@ export interface Notification {
   metadata?: Record<string, any>;
 }
 
-interface NotificationSystemProps {}
-
-export function NotificationSystem({}: NotificationSystemProps) {
+export function NotificationSystem() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
