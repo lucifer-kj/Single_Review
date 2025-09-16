@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { RealtimeProvider } from "@/components/realtime/realtime-provider";
+import { AppSettingsProvider } from "@/components/providers/app-settings-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <RealtimeProvider>
-          {children}
+          <AppSettingsProvider>
+            {children}
+          </AppSettingsProvider>
         </RealtimeProvider>
       </body>
     </html>

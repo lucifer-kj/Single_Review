@@ -20,11 +20,9 @@ export interface Notification {
   metadata?: Record<string, any>;
 }
 
-interface NotificationSystemProps {
-  businessId?: string;
-}
+interface NotificationSystemProps {}
 
-export function NotificationSystem({ businessId }: NotificationSystemProps) {
+export function NotificationSystem({}: NotificationSystemProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -90,10 +88,8 @@ export function NotificationSystem({ businessId }: NotificationSystemProps) {
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!businessId) return;
-
-    // Subscribe to new reviews
-    const reviewsSubscription = subscribeToReviews(businessId, (payload) => {
+    // Subscribe to new reviews (global for single business)
+    const reviewsSubscription = subscribeToReviews('global', (payload) => {
       if (payload.eventType === 'INSERT') {
         const review = payload.new;
         addNotification({
@@ -101,7 +97,6 @@ export function NotificationSystem({ businessId }: NotificationSystemProps) {
           title: 'New Review Received',
           message: `${review.customer_name || 'Anonymous'} left a ${review.rating}-star review`,
           priority: review.rating <= 2 ? 'high' : 'medium',
-          businessId,
           metadata: { reviewId: review.id, rating: review.rating },
         });
 
@@ -112,22 +107,20 @@ export function NotificationSystem({ businessId }: NotificationSystemProps) {
             title: 'Low Rating Alert',
             message: `Received a ${review.rating}-star review that may need attention`,
             priority: 'high',
-            businessId,
             metadata: { reviewId: review.id, rating: review.rating },
           });
         }
       }
     });
 
-    // Subscribe to analytics updates
-    const analyticsSubscription = subscribeToAnalytics(businessId, (payload) => {
+    // Subscribe to analytics updates (global for single business)
+    const analyticsSubscription = subscribeToAnalytics('global', (payload) => {
       if (payload.eventType === 'INSERT') {
         addNotification({
           type: 'analytics_update',
           title: 'Analytics Update',
           message: 'New analytics data available',
           priority: 'low',
-          businessId,
         });
       }
     });
@@ -136,7 +129,7 @@ export function NotificationSystem({ businessId }: NotificationSystemProps) {
       reviewsSubscription.unsubscribe();
       analyticsSubscription.unsubscribe();
     };
-  }, [businessId, subscribeToReviews, subscribeToAnalytics, addNotification]);
+  }, [subscribeToReviews, subscribeToAnalytics, addNotification]);
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {

@@ -30,17 +30,10 @@ interface RatingDistribution {
   5: number;
 }
 
-interface Business {
-  id: string;
-  name: string;
-}
-
 export function AnalyticsOverview() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [trends, setTrends] = useState<ReviewTrend[]>([]);
   const [ratingDistribution, setRatingDistribution] = useState<RatingDistribution | null>(null);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [selectedBusiness, setSelectedBusiness] = useState<string>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('30');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,10 +44,6 @@ export function AnalyticsOverview() {
       const params = new URLSearchParams({
         period: selectedPeriod,
       });
-      
-      if (selectedBusiness !== 'all') {
-        params.append('business_id', selectedBusiness);
-      }
 
       const response = await fetch(`/api/analytics?${params}`);
       const data = await response.json();
@@ -63,7 +52,6 @@ export function AnalyticsOverview() {
         setMetrics(data.metrics);
         setTrends(data.trends);
         setRatingDistribution(data.rating_distribution);
-        setBusinesses(data.businesses);
       } else {
         setError(data.error || 'Failed to fetch analytics');
       }
@@ -73,6 +61,10 @@ export function AnalyticsOverview() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [selectedPeriod]);
 
   if (loading) {
     return (
@@ -164,22 +156,6 @@ export function AnalyticsOverview() {
               </Select>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">Business:</span>
-              <Select value={selectedBusiness} onValueChange={setSelectedBusiness}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Businesses</SelectItem>
-                  {businesses.map((business) => (
-                    <SelectItem key={business.id} value={business.id}>
-                      {business.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -240,18 +216,18 @@ export function AnalyticsOverview() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Top Performing Business</CardTitle>
+            <CardTitle>Conversion Rate</CardTitle>
             <CardDescription>
-              Highest conversion rate
+              Reviews to Google redirects
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {businesses.length > 0 ? businesses[0].name : 'N/A'}
+                {metrics?.conversion_rate || 0}%
               </div>
               <p className="text-sm text-muted-foreground">
-                {metrics?.conversion_rate || 0}% conversion rate
+                High ratings redirect to Google
               </p>
             </div>
           </CardContent>

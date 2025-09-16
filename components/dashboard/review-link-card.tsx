@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Copy, Check, ExternalLink, QrCode } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copy-button';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
 export function ReviewLinkCard() {
   const [reviewUrl, setReviewUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const { settings } = useAppSettings();
 
   useEffect(() => {
     // Generate the review URL based on current domain
@@ -86,7 +88,10 @@ export function ReviewLinkCard() {
         <div className="text-xs text-muted-foreground">
           <p>• High ratings (4-5 stars) will redirect to Google Business Profile</p>
           <p>• Low ratings (1-3 stars) will redirect to internal feedback form</p>
-          <p>• Make sure to configure your Google Business URL in Settings</p>
+          <p>• Configure your Google Business URL in Settings for redirects</p>
+          {settings?.google_business_url && (
+            <p className="text-green-600">✓ Google Business URL configured</p>
+          )}
         </div>
       </CardContent>
     </Card>

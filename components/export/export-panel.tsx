@@ -8,24 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
-import { exportReviewsToCSV, exportAnalyticsToCSV, exportBusinessesToCSV } from '@/lib/export-utils';
-import { useBusinessStore } from '@/stores/store';
+import { exportReviewsToCSV, exportAnalyticsToCSV } from '@/lib/export-utils';
 
 interface ExportPanelProps {
-  businessId?: string;
   reviews?: any[];
   analytics?: any[];
 }
 
-export function ExportPanel({ businessId, reviews = [], analytics = [] }: ExportPanelProps) {
-  const [exportType, setExportType] = useState<'reviews' | 'analytics' | 'businesses'>('reviews');
+export function ExportPanel({ reviews = [], analytics = [] }: ExportPanelProps) {
+  const [exportType, setExportType] = useState<'reviews' | 'analytics'>('reviews');
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
   const [isExporting, setIsExporting] = useState(false);
-  
-  const { businesses } = useBusinessStore();
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -41,18 +37,12 @@ export function ExportPanel({ businessId, reviews = [], analytics = [] }: Export
         });
       }
 
-      const business = businesses.find(b => b.id === businessId);
-      const businessName = business?.name;
-
       switch (exportType) {
         case 'reviews':
-          exportReviewsToCSV(filteredData, businessName);
+          exportReviewsToCSV(filteredData);
           break;
         case 'analytics':
-          exportAnalyticsToCSV(analytics, businessName);
-          break;
-        case 'businesses':
-          exportBusinessesToCSV(businesses);
+          exportAnalyticsToCSV(analytics);
           break;
       }
     } catch (error) {
@@ -69,8 +59,6 @@ export function ExportPanel({ businessId, reviews = [], analytics = [] }: Export
         return <FileText className="w-4 h-4" />;
       case 'analytics':
         return <BarChart3 className="w-4 h-4" />;
-      case 'businesses':
-        return <Building2 className="w-4 h-4" />;
       default:
         return <Download className="w-4 h-4" />;
     }
@@ -82,8 +70,6 @@ export function ExportPanel({ businessId, reviews = [], analytics = [] }: Export
         return 'Export customer reviews with ratings and comments';
       case 'analytics':
         return 'Export analytics data including metrics and trends';
-      case 'businesses':
-        return 'Export all business information and statistics';
       default:
         return '';
     }
@@ -95,8 +81,6 @@ export function ExportPanel({ businessId, reviews = [], analytics = [] }: Export
         return reviews.length;
       case 'analytics':
         return analytics.length;
-      case 'businesses':
-        return businesses.length;
       default:
         return 0;
     }
@@ -132,12 +116,6 @@ export function ExportPanel({ businessId, reviews = [], analytics = [] }: Export
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4" />
                   <span>Analytics ({analytics.length})</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="businesses">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4" />
-                  <span>Businesses ({businesses.length})</span>
                 </div>
               </SelectItem>
             </SelectContent>

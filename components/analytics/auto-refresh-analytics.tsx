@@ -10,14 +10,12 @@ interface AutoRefreshAnalyticsProps {
   children: React.ReactNode;
   refreshInterval?: number; // in milliseconds
   onRefresh?: () => void;
-  businessId?: string;
 }
 
 export function AutoRefreshAnalytics({
   children,
   refreshInterval = 30000, // 30 seconds default
   onRefresh,
-  businessId,
 }: AutoRefreshAnalyticsProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -71,9 +69,7 @@ export function AutoRefreshAnalytics({
   const { subscribeToAnalytics } = useRealtime();
   
   useEffect(() => {
-    if (!businessId) return;
-
-    const analyticsSubscription = subscribeToAnalytics(businessId, () => {
+    const analyticsSubscription = subscribeToAnalytics('global', () => {
       // Auto-refresh when analytics data changes
       if (autoRefreshEnabled) {
         handleRefresh();
@@ -83,7 +79,7 @@ export function AutoRefreshAnalytics({
     return () => {
       analyticsSubscription.unsubscribe();
     };
-  }, [businessId, autoRefreshEnabled, handleRefresh, subscribeToAnalytics]);
+  }, [autoRefreshEnabled, handleRefresh, subscribeToAnalytics]);
 
   const getStatusColor = () => {
     if (!isOnline) return 'bg-red-500';

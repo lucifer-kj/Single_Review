@@ -18,18 +18,12 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface Review {
   id: string;
-  business_id: string;
   customer_name: string;
   customer_phone?: string;
   rating: number;
   comment?: string;
   is_public: boolean;
   created_at: string;
-  businesses: {
-    id: string;
-    name: string;
-    logo_url?: string;
-  };
 }
 
 export function ReviewsTable() {
@@ -101,7 +95,6 @@ export function ReviewsTable() {
           <TableHeader>
             <TableRow>
               <TableHead>Customer</TableHead>
-              <TableHead>Business</TableHead>
               <TableHead>Rating</TableHead>
               <TableHead>Comment</TableHead>
               <TableHead>Status</TableHead>
@@ -127,23 +120,6 @@ export function ReviewsTable() {
                         </div>
                       )}
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    {review.businesses.logo_url ? (
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={review.businesses.logo_url} />
-                        <AvatarFallback>
-                          {review.businesses.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ) : (
-                      <div className="h-6 w-6 bg-muted rounded flex items-center justify-center text-xs">
-                        {review.businesses.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="text-sm">{review.businesses.name}</span>
                   </div>
                 </TableCell>
                 <TableCell>

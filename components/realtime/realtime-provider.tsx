@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { realtimeService, type RealtimeSubscription } from '@/lib/realtime';
 import { useUserStore } from '@/stores/store';
-import { useBusinessStore } from '@/stores/store';
 
 interface RealtimeContextType {
   isConnected: boolean;
@@ -21,7 +20,6 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const [connectionStatus, setConnectionStatus] = useState<'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING'>('DISCONNECTED');
   
   const { user } = useUserStore();
-  const { fetchBusinesses } = useBusinessStore();
 
   useEffect(() => {
     if (!user) {
@@ -31,16 +29,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Subscribe to businesses updates
-    const businessesSubscription = realtimeService.subscribeToBusinesses(
-      user.id,
-      (payload) => {
-        console.log('Businesses update:', payload);
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
-          fetchBusinesses();
-        }
-      }
-    );
+    // No business subscriptions needed for single business model
 
     // Monitor connection status
     const checkConnection = () => {
@@ -53,10 +42,9 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     checkConnection();
 
     return () => {
-      businessesSubscription.unsubscribe();
       clearInterval(interval);
     };
-  }, [user, fetchBusinesses]);
+  }, [user]);
 
   const subscribeToReviews = (businessId: string, callback: (payload: any) => void) => {
     return realtimeService.subscribeToReviews(businessId, callback);

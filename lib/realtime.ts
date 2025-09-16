@@ -11,13 +11,13 @@ export class RealtimeService {
   private subscriptions = new Map<string, RealtimeSubscription>();
 
   /**
-   * Subscribe to business reviews updates
+   * Subscribe to reviews updates (global for single business)
    */
   subscribeToReviews(
-    businessId: string,
+    businessId: string, // Keep parameter for compatibility but ignore it
     onUpdate: (payload: any) => void
   ): RealtimeSubscription {
-    const channelName = `reviews:business_id=eq.${businessId}`;
+    const channelName = `reviews:global`;
     
     if (this.subscriptions.has(channelName)) {
       this.subscriptions.get(channelName)?.unsubscribe();
@@ -31,7 +31,6 @@ export class RealtimeService {
           event: '*',
           schema: 'public',
           table: 'reviews',
-          filter: `business_id=eq.${businessId}`,
         },
         onUpdate
       )
@@ -89,13 +88,13 @@ export class RealtimeService {
   }
 
   /**
-   * Subscribe to analytics updates
+   * Subscribe to analytics updates (global for single business)
    */
   subscribeToAnalytics(
-    businessId: string,
+    businessId: string, // Keep parameter for compatibility but ignore it
     onUpdate: (payload: any) => void
   ): RealtimeSubscription {
-    const channelName = `analytics:business_id=eq.${businessId}`;
+    const channelName = `analytics:global`;
     
     if (this.subscriptions.has(channelName)) {
       this.subscriptions.get(channelName)?.unsubscribe();
@@ -109,7 +108,6 @@ export class RealtimeService {
           event: '*',
           schema: 'public',
           table: 'analytics',
-          filter: `business_id=eq.${businessId}`,
         },
         onUpdate
       )

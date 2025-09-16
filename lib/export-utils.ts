@@ -8,7 +8,6 @@ export interface ExportData {
 
 export interface ReviewExportData {
   id: string;
-  business_name: string;
   customer_name: string;
   customer_email?: string;
   rating: number;
@@ -66,10 +65,9 @@ export function downloadCSV(csvContent: string, filename: string): void {
 /**
  * Export reviews to CSV
  */
-export function exportReviewsToCSV(reviews: ReviewExportData[], businessName?: string): void {
+export function exportReviewsToCSV(reviews: ReviewExportData[]): void {
   const headers = [
     'ID',
-    'Business Name',
     'Customer Name',
     'Customer Email',
     'Rating',
@@ -80,7 +78,6 @@ export function exportReviewsToCSV(reviews: ReviewExportData[], businessName?: s
 
   const rows = reviews.map(review => [
     review.id,
-    review.business_name,
     review.customer_name || '',
     review.customer_email || '',
     review.rating,
@@ -89,9 +86,7 @@ export function exportReviewsToCSV(reviews: ReviewExportData[], businessName?: s
     review.allow_follow_up ? 'Yes' : 'No'
   ]);
 
-  const filename = businessName 
-    ? `${businessName.replace(/[^a-zA-Z0-9]/g, '_')}_reviews_${format(new Date(), 'yyyy-MM-dd')}.csv`
-    : `reviews_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  const filename = `reviews_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
 
   const csvContent = convertToCSV({ headers, rows, filename });
   downloadCSV(csvContent, filename);
@@ -100,7 +95,7 @@ export function exportReviewsToCSV(reviews: ReviewExportData[], businessName?: s
 /**
  * Export analytics to CSV
  */
-export function exportAnalyticsToCSV(analytics: AnalyticsExportData[], businessName?: string): void {
+export function exportAnalyticsToCSV(analytics: AnalyticsExportData[]): void {
   const headers = [
     'Date',
     'Total Reviews',
@@ -117,9 +112,7 @@ export function exportAnalyticsToCSV(analytics: AnalyticsExportData[], businessN
     data.link_clicks
   ]);
 
-  const filename = businessName 
-    ? `${businessName.replace(/[^a-zA-Z0-9]/g, '_')}_analytics_${format(new Date(), 'yyyy-MM-dd')}.csv`
-    : `analytics_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+  const filename = `analytics_export_${format(new Date(), 'yyyy-MM-dd')}.csv`;
 
   const csvContent = convertToCSV({ headers, rows, filename });
   downloadCSV(csvContent, filename);

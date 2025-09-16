@@ -6,47 +6,27 @@ export interface ApiResponse<T = unknown> {
   details?: unknown;
 }
 
-// Business Types
-export interface Business {
-  id: string;
-  user_id: string;
+// App Settings Types (replaces Business types for single business model)
+export interface AppSettings {
+  id: boolean;
   name: string;
   description?: string;
-  address?: string;
+  logo_url?: string;
+  google_business_url?: string;
   phone?: string;
   email?: string;
+  address?: string;
   website?: string;
-  google_business_url?: string;
-  logo_url?: string;
   brand_color: string;
   welcome_message: string;
   thank_you_message: string;
   created_at: string;
   updated_at: string;
-  reviews_count?: number;
-  average_rating?: number;
 }
-
-export interface BusinessCreateData {
-  name: string;
-  description?: string;
-  address?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  google_business_url?: string;
-  logo_url?: string;
-  brand_color?: string;
-  welcome_message?: string;
-  thank_you_message?: string;
-}
-
-export type BusinessUpdateData = Partial<BusinessCreateData>;
 
 // Review Types
 export interface Review {
   id: string;
-  business_id: string;
   rating: number;
   comment?: string;
   customer_name?: string;

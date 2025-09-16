@@ -11,6 +11,7 @@ import { NotificationSystem } from '@/components/notifications/notification-syst
 import { ExportPanel } from '@/components/export/export-panel';
 import { AutoRefreshAnalytics } from '@/components/analytics/auto-refresh-analytics';
 import { ReviewLinkCard } from '@/components/dashboard/review-link-card';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
 interface DashboardMetrics {
   total_reviews: number;
@@ -40,6 +41,7 @@ export function DashboardOverview() {
   const [ratingDistribution, setRatingDistribution] = useState<RatingDistribution | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { settings } = useAppSettings();
 
   useEffect(() => {
     const fetchAllAnalytics = async () => {
@@ -127,9 +129,11 @@ export function DashboardOverview() {
       {/* Header with Notifications */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">
+            {settings?.name || 'Dashboard'}
+          </h1>
           <p className="text-muted-foreground">
-            Welcome to your review management dashboard
+            {settings?.description || 'Welcome to your review management dashboard'}
           </p>
         </div>
         <NotificationSystem />
